@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hello world</title>
+		
+		<!--Import of stylesheets-->
+		<link rel="stylesheet" type="text/css" href="styles/main.css" />
+
+		<style>
+			body {
+				background-color: #F0F0F0;
+			}
+			#userInput {
+				width: 500px;
+				height: 200px;
+			}
+			#output {
+				width: 300px;
+				height: 100px;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Hello, world!</h1>
+		</header>
+
+		<main>
+			<button onclick="fileEditor_onClick()">
+				File Editor
+			</button>
+		</main>
+
+		<script src="/node_modules/socket.io-client/socket.io.js"></script>
+		<script>
+			function fileEditor_onClick() {
+				alert('Button clicked!');
+				var socket = io('http://localhost/');
+				socket.emit('charUpdate', 'Hello');
+				alert('Message sent');
+			}	
+		</script>
+	</body>
+</html>

@@ -1,0 +1,9 @@
+body {
+	background-color: #F0F0F0;
+}
+
+#userInput {
+	width: 700px;
+	height: 500px;
+	font-size: 20px;
+}
