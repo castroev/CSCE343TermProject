@@ -1,6 +1,23 @@
-/*
-* Jonas Nordstrom; Ermenildo Castro Jr.
-* Server - CSCE343 Fall Project
+/**
+Jonas Nordstrom; Ermenildo V. Castro, Jr.
+server.js
+-----------------------------------------------------------------
+Known Bugs:
+
+
+-----------------------------------------------------------------
+Description:
+<<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
+Version: 0.0.2
+Last Update: 11/16/14
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Available Program Functions:
+
+-----------------------------------------------------------------
+References:
+SmashingJsNode;
+StackOverflow;
+-----------------------------------------------------------------
 */
 var express = require('express');
 var app = express();
@@ -31,19 +48,26 @@ app.get('/', function(req, res) {
 			console.log(err);
 			res.status(err.status).end();
 		} else {
+			//MODIFICATION 11/16/14
+			//POPULATE LOCALFILES from MASTERLOG
+			// "./files/" - local files directory of server
+			fileHandler.listFiles('./files/');
+			//---------------------
 			console.log('Sent: index.html');
 		}
 	});
 });
 
-// Route when a file is tried to get retreived
-app.get('/file/:name', function(req, res) {
+// Route when a file is tried to get retrieved
+app.get('/files/:name', function(req, res) {
 	console.log('\nIP: ' + req.ip);
 	var fileName = req.params.name;
 	console.log('\tFile "' + fileName + '" is being requested');
 
 	// Validate if the file name is valid
-	if (fileHandler.existsFile('files/' + fileName)) {
+	//MODIFIED 11/16/14
+	//removed 'files/' append
+	if (fileHandler.existsFile(fileName)) {
 		// File name is valid
 		//TODO: Implement logic what happens when client tries to reach file
 		console.log('\tAbout to route "/file/' + fileName + '"');
@@ -55,10 +79,28 @@ app.get('/file/:name', function(req, res) {
 		res.status(404).sendFile(__dirname + '/html/error.html');
 	}
 });
-
-/*
-* Routing ends
+/**
+updateDirectory call
+updateDirectory(cmd, fname, path, data)
 */
+app.get('/files/:name/:cmd', function(req, res) {
+	console.log('\nIP: ' + req.ip);
+	var fileName = req.params.name.replace('\r\n','').trim(); //remove return characters
+	var cmd = req.params.cmd;
+	console.log("Directory Update Requested\n");
+	//Local path set to default ./files/
+	if (fileHandler.updateDirectory(cmd, fileName, "./files/")) {
+		// File name is valid
+		res.send('You updated: "' + fileName + '"');
+	} else {
+		// File name is not valid, inform client
+		console.log('\tFile "' + 
+			fileName + '", update error.');
+		res.status(404).sendFile(__dirname + '/html/error.html');
+	}
+	
+});
+
 
 function start() {
 	console.log("##### Server started #####");
