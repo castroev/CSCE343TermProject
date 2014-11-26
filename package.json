@@ -2,15 +2,10 @@
   "name": "project-fall-csce343",
   "version": "0.0.1",
   "description": "Ermenildo Castro & Jonas Nordstrom project, fall 2014, for class CSCE 343",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
   "author": "Jonas Nordstrom, Ermenildo Castro",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "express": "~4.10.1",
-    "socket.io-client": "~1.2.0"
+    "express": "^4.10.2",
+    "socket.io": "^1.2.1"
   }
 }

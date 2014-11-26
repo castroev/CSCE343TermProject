@@ -12,7 +12,7 @@ Version: 0.0.2
 Last Update: 11/16/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
-
+- start
 -----------------------------------------------------------------
 References:
 SmashingJsNode;
@@ -101,7 +101,14 @@ app.get('/files/:name/:cmd', function(req, res) {
 	
 });
 
-
+/**
+start:
+	- Starts up the server with configured settings
+ 	- Adds event handlers when a specific function is being requested
+		o connection
+		o getAvailableFiles //TODO: create event handler
+		o charUpdate
+ */
 function start() {
 	console.log("##### Server started #####");
 	var server = http.createServer(app);
@@ -110,7 +117,14 @@ function start() {
 	server.on('connection', function(socket) {
 		console.log('\nNew connection:\n\tIP: ' + socket.address().address + '\n\tPort: ' +
 			socket.address().port + '\n');
+		// Will be fired when a client requests available files on server
+		socket.on('getAvailableFiles', function(val) {
+//			var names = fileHandler.listFiles('./files/');
+			console.log('Been here\n');
+			console.log(val + '\n');
+		});
 	});
+
 
 	// Will be fired when a client sends an character update
 	server.on('charUpdate', function(character, index) {
