@@ -123,14 +123,14 @@ function start() {
 			console.log('Been here\n');
 			console.log(val + '\n');
 		});
+		// Will be fired when a client sends an character update
+		server.on('charUpdate', function(character, index) {
+			console.log('charUpdate has been called\n\tValue of character: ' +
+				character + '\n\tValue of index: ' + index);
+		});
 	});
 
 
-	// Will be fired when a client sends an character update
-	server.on('charUpdate', function(character, index) {
-		console.log('charUpdate has been called\n\tValue of character: ' +
-			character + '\n\tValue of index: ' + index);
-	});
 
 	//TODO: Write logic for what is happening when a client is connecting
 
