@@ -22,6 +22,10 @@ StackOverflow;
 var express = require('express');
 var app = express();
 var http = require('http');
+var events = require('events');
+var eventEmitter = new events.EventEmitter();
+var server = http.Server(app);
+var io = require('socket.io')(server);
 var fileHandler = require('./fileHandler.js');
 
 const PORT = 8888;
@@ -101,6 +105,17 @@ app.get('/files/:name/:cmd', function(req, res) {
 	
 });
 
+/*
+connection:
+	- Will be emitted when a host connects a socket to the server
+	- Display information about the client to the log
+ */
+io.on('connection', function(socket) {
+	console.log('\nNew connection:\n\tID: ' + socket.id + '\n');
+	var answer = "You are succeful connected to the server";
+	socket.emit('successfulConnection', answer);
+});
+
 /**
 start:
 	- Starts up the server with configured settings
@@ -108,36 +123,38 @@ start:
 		o connection
 		o getAvailableFiles //TODO: create event handler
 		o charUpdate
+
+Last modified: 11/26/14
  */
 function start() {
 	console.log("##### Server started #####");
-	var server = http.createServer(app);
+//	var server = http.createServer(app);
 
 	// Will be executed when a user is being connected
-	server.on('connection', function(socket) {
+/*	server.on('connection', function(socket) {
 		console.log('\nNew connection:\n\tIP: ' + socket.address().address + '\n\tPort: ' +
 			socket.address().port + '\n');
-		// Will be fired when a client requests available files on server
-		socket.on('getAvailableFiles', function(val) {
-//			var names = fileHandler.listFiles('./files/');
-			console.log('Been here\n');
-			console.log(val + '\n');
-		});
-		// Will be fired when a client sends an character update
-		server.on('charUpdate', function(character, index) {
-			console.log('charUpdate has been called\n\tValue of character: ' +
-				character + '\n\tValue of index: ' + index);
-		});
 	});
-
-
-
+*/
+	// Will be fired when a client requests available files on server
+/*	server.on('getAvailableFiles', function(val) {
+//			var names = fileHandler.listFiles('./files/');
+		console.log('Been here\n');
+		console.log(val + '\n');
+	});*/
+	// Will be fired when a client sends an character update
+/*	server.on('charUpdate', function(character, index) {
+		console.log('charUpdate has been called\n\tValue of character: ' +
+			character + '\n\tValue of index: ' + index);
+	});
+*/
 	//TODO: Write logic for what is happening when a client is connecting
 
 	//TODO: Write logic for what is happening when we recieve an event
 
-	console.log('Server starts listening on port ' + PORT);
-	server.listen(PORT);
+	server.listen(PORT, function() {
+		console.log('Server is listening on port ' + PORT);	
+	});
 
 }
 

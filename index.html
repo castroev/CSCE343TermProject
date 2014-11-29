@@ -10,23 +10,15 @@
 			body {
 				background-color: #F0F0F0;
 			}
-			#userInput {
-				width: 500px;
-				height: 200px;
-			}
-			#output {
-				width: 300px;
-				height: 100px;
-			}
 		</style>
 	</head>
-	<body onload="page_onload()">
+	<body>
 		<header>
 			<h1>Hello, world!</h1>
 		</header>
 
-		<main>
-			<button onclick="fileEditor_onClick()">
+		<form action="">	
+			<button>
 				File Editor
 			</button>
 
@@ -36,18 +28,24 @@
 		</main>
 
 		<script src="/socket.io/socket.io.js"></script>
-		<!--		<script src="https://cdn.socket.io/socket.io-1.2.1.js"></script>-->
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 		<script>
-			var socket;
-			function page_onload() {
-				socket = io('http://localhost/');
-			}
-			function fileEditor_onClick() {
-				alert('Button clicked!');
-//				var div = document.getElementById('output').appendChild(';
-				socket.emit('getAvailableFiles', 'Hello');
-				alert('Message sent');
-			}	
+			$(document).ready(function() {
+				var socket = io.connect();
+
+				socket.on('connect', function() {
+					$('#output').html("Connected");
+				});
+				socket.on('disconnect', function() {
+					$('#output').html("Disconnected");
+				});
+				socket.on('error', function(err) {
+					$('#output').html(err);
+				});
+				socket.on('successfulConnection', function(param) {
+					$('#output').html(param);
+				});
+			});
 		</script>
 	</body>
 </html>
