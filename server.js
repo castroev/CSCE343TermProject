@@ -55,7 +55,7 @@ app.get('/', function(req, res) {
 			//MODIFICATION 11/16/14
 			//POPULATE LOCALFILES from MASTERLOG
 			// "./files/" - local files directory of server
-			fileHandler.listFiles('./files/');
+//			fileHandler.listFiles('./files/'); //TODO: This call will be made in a successful connection
 			//---------------------
 			console.log('Sent: index.html');
 		}
@@ -73,9 +73,24 @@ app.get('/files/:name', function(req, res) {
 	//removed 'files/' append
 	if (fileHandler.existsFile(fileName)) {
 		// File name is valid
-		//TODO: Implement logic what happens when client tries to reach file
 		console.log('\tAbout to route "/file/' + fileName + '"');
-		res.send('Your are trying to get "' + fileName + '"');
+		var options = {
+			root: __dirname,
+			dotfiles: 'deny',
+			header: {
+				'x-timestamp': Date.now(),
+				'x-sent': true
+			}
+		};
+		res.sendFile('editor.html', options, function(err) {
+			if (err) {
+				// Error occurred when sending file
+				console.log(err);
+				res.status(err.status).end();
+			} else {
+				console.log('Sent: editor.html');
+			}
+		});
 	} else {
 		// File name is not valid, inform client
 		console.log('\tFile "' + 
@@ -95,7 +110,23 @@ app.get('/files/:name/:cmd', function(req, res) {
 	//Local path set to default ./files/
 	if (fileHandler.updateDirectory(cmd, fileName, "./files/")) {
 		// File name is valid
-		res.send('You updated: "' + fileName + '"');
+		var options = {
+			root: __dirname,
+			dotfiles: 'deny',
+			header: {
+				'x-timestamp': Date.now(),
+				'x-sent': true
+			}
+		};
+		res.sendFile('editor.html', options, function(err) {
+			if (err) {
+				// Error occurred when sending file
+				console.log(err);
+				res.status(err.status).end();
+			} else {
+				console.log('Sent: editor.html');
+			}
+		});
 	} else {
 		// File name is not valid, inform client
 		console.log('\tFile "' + 
@@ -106,48 +137,56 @@ app.get('/files/:name/:cmd', function(req, res) {
 });
 
 /*
+ * Event *
 connection:
-	- Will be emitted when a host connects a socket to the server
+	- Will be fired when a host connects a socket to the server
 	- Display information about the client to the log
+	- Emits the event successfulConnection
+	- Inner Events:
+		- getAvailableFiles
  */
 io.on('connection', function(socket) {
 	console.log('\nNew connection:\n\tID: ' + socket.id + '\n');
-	var answer = "You are succeful connected to the server";
-	socket.emit('successfulConnection', answer);
+	socket.emit('successfulConnection', socket.id);
+
+	/**
+	 * Event *
+	 getAvailableFiles:
+	 	Parameter:
+			- A callback function which takes a list of file names
+	 Last modified: 11/29/14
+	 */
+	socket.on('getAvailableFiles', function(callback) {
+		console.log('Request for files received');
+		var names = fileHandler.listFiles('./files/');
+
+		callback(names);
+	});
+	socket.on('getFile', fileName, editMode, function(callback) {
+		console.log('Request for ' + fileName + ' received');
+
+		if (editMode) {
+			// User wants to edit this file
+			//TODO: Should the editor join the file room?
+		} else {
+			// User wants to listen to this file, add the user to the listener room of this file
+			socket.join(fileName);
+			// Return the text of the file to the client
+			callback(fileHandler.getFile('./files/', fileName));
+			//TODO: 11/29/14 Continue here!!!
+		}
+		fileHandler.getFile('./files/', fileName);
+	});
 });
 
 /**
 start:
 	- Starts up the server with configured settings
- 	- Adds event handlers when a specific function is being requested
-		o connection
-		o getAvailableFiles //TODO: create event handler
-		o charUpdate
-
-Last modified: 11/26/14
+Last modified: 11/29/14
  */
 function start() {
 	console.log("##### Server started #####");
-//	var server = http.createServer(app);
 
-	// Will be executed when a user is being connected
-/*	server.on('connection', function(socket) {
-		console.log('\nNew connection:\n\tIP: ' + socket.address().address + '\n\tPort: ' +
-			socket.address().port + '\n');
-	});
-*/
-	// Will be fired when a client requests available files on server
-/*	server.on('getAvailableFiles', function(val) {
-//			var names = fileHandler.listFiles('./files/');
-		console.log('Been here\n');
-		console.log(val + '\n');
-	});*/
-	// Will be fired when a client sends an character update
-/*	server.on('charUpdate', function(character, index) {
-		console.log('charUpdate has been called\n\tValue of character: ' +
-			character + '\n\tValue of index: ' + index);
-	});
-*/
 	//TODO: Write logic for what is happening when a client is connecting
 
 	//TODO: Write logic for what is happening when we recieve an event

@@ -3,9 +3,6 @@
 	<head>
 		<title>Hello world</title>
 		
-		<!--Import of stylesheets-->
-		<link rel="stylesheet" type="text/css" href="styles/main.css" />
-
 		<style>
 			body {
 				background-color: #F0F0F0;
@@ -17,15 +14,17 @@
 			<h1>Hello, world!</h1>
 		</header>
 
-		<form action="">	
-			<button>
-				File Editor
-			</button>
+		<button id="editFile"> 
+			Edit File
+		</button>
 
-			<div id="output">
+		<br />
+		<select id="files">
 
-			</div>
-		</main>
+		</select>
+
+		<div id="output">
+		</div>
 
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
@@ -42,8 +41,19 @@
 				socket.on('error', function(err) {
 					$('#output').html(err);
 				});
-				socket.on('successfulConnection', function(param) {
-					$('#output').html(param);
+				socket.on('successfulConnection', function(id) { 
+                                       	$('#output').html('Socket ID: ' + id);
+					
+					socket.emit('getAvailableFiles', function(names) {
+						for (i = 0; i < names.length; i++) {
+							$('#files').append('<option value="' + names[i] + '">' + names[i] + '</option>');
+						}
+				        });
+				});
+				
+				$('#editFile').click(function() {
+					alert($('#files').val());
+					window.location.href = '/files/' + $('#files').val() + '/REFRESH';
 				});
 			});
 		</script>

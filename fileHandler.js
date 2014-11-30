@@ -74,10 +74,13 @@ function listFiles(path){
 		for (i = 0; i < localFiles.length - 1; i++){
 			process.stdout.write("Key " + i + ": " + localFiles[i] + "\n");
 		}
+
+		return localFiles;
 	}
 	else{
 		process.stdout.write("Enter the directory of MASTERLOG.txt");
 		process.stdout.write("./files/ <--- local directory of server");
+		return;
 	}
 }
 /**

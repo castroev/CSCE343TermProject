@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Editor</title>
+
+		<style>
+			#inputText {
+				width: 500px;
+				height: 200px;
+
+			}
+		</style>
+	</head>
+
+	<body>
+		<header>
+			<h1>Editor</h1>
+		</header>
+
+		<main>
+			<textarea id="inputText">
+			</textarea>
+			<div id="output">
+			</div>
+		</main>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+			$(document).ready(function() {
+				// Document has been loaded, create a socket to server and to specific room for this file
+				var socket = io.connect();
+
+				var path = window.location.pathname;
+				var args = path.split('/');
+				if (args.length == 4) {
+					// cmd is passed
+					$('#output').html(args.length);
+
+					
+
+				} else {
+					// No cmd is passed, default is read mode
+					$('#inputText').attr('readonly', 'readonly');	
+				}
+			});
+		</script>
+	</body>
+</html>
