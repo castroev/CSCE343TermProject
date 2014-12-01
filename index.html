@@ -17,6 +17,9 @@
 		<button id="editFile"> 
 			Edit File
 		</button>
+		<button id="readFile">
+			Read File
+		</button>
 
 		<br />
 		<select id="files">
@@ -52,8 +55,11 @@
 				});
 				
 				$('#editFile').click(function() {
-					alert($('#files').val());
-					window.location.href = '/files/' + $('#files').val() + '/REFRESH';
+					//TODO: Add appropriate url cmd.
+					window.location.href = '/files/' + $('#files').val();
+				});
+				$('#readFile').click(function() {
+					window.location.href = '/files/' + $('#files').val();
 				});
 			});
 		</script>

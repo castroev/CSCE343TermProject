@@ -20,6 +20,11 @@
 		<main>
 			<textarea id="inputText">
 			</textarea>
+			<button id="exitButton">
+				Done
+			</button>
+			<div id="infoBox">
+			</div>
 			<div id="output">
 			</div>
 		</main>
@@ -29,20 +34,65 @@
 		<script>
 			$(document).ready(function() {
 				// Document has been loaded, create a socket to server and to specific room for this file
+				var editMode = false;
+				// Create a new socket connected to the server
 				var socket = io.connect();
 
+				/*
+				* Find out if there are any commands passed
+				*/
 				var path = window.location.pathname;
 				var args = path.split('/');
 				if (args.length == 4) {
-					// cmd is passed
+					// cmd is passed, decide which command it is
+					editMode = true;
 					$('#output').html(args.length);
-
-					
+					$('#infoBox').html('You are in editing mode.');
+					socket.emit('getFile', args[2], editMode, function(data) {
+						// The callback will receive the text file
+						$('#inputText').attr('value', data);
+					});
 
 				} else {
 					// No cmd is passed, default is read mode
-					$('#inputText').attr('readonly', 'readonly');	
+					editMode = false;
+					$('#inputText').attr('readonly', 'readonly');
+					$('#infoBox').html('You are in read mode.');
+					
+					socket.emit('getFile', args[2], editMode, function() {
+						// The callback will receive the text file
+						$('#inputText').attr('value', data);
+					});
 				}
+
+				/**
+				 Event newChar
+				 - Will be fired when there is a new update in the file
+				*/
+				socket.on('newChar', function(arg) {
+					
+				});
+
+				/**
+				 Event #inputText.keypress
+				 - Will be fired when a key is pressed with the focus on the #inputText
+				 Last modified: 11/30/14, J.Nordstrom
+				*/
+				$('#inputText').keypress(function(event) {
+					// Key is pressed, send update to server
+					//TODO: Implement the newChar call, with the parameters keyVal, index and callback
+				});
+				/**
+				  Event #exitButton.click
+				  - Will be fired when the user wants to exit
+				  Last modified: 11/30/14, J.Nordstrom
+				 */
+				$('#exitButton').click(function() {
+					// The listeners will leave the socket room automatically when socket
+					// is being closed. Since each char is being updated continuously we
+					// can exit this page safely
+					window.location.replace('/');
+				});
 			});
 		</script>
 	</body>

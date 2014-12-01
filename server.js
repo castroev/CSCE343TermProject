@@ -144,6 +144,7 @@ connection:
 	- Emits the event successfulConnection
 	- Inner Events:
 		- getAvailableFiles
+Last modified: 11/30/14, J.Nordstrom
  */
 io.on('connection', function(socket) {
 	console.log('\nNew connection:\n\tID: ' + socket.id + '\n');
@@ -154,7 +155,7 @@ io.on('connection', function(socket) {
 	 getAvailableFiles:
 	 	Parameter:
 			- A callback function which takes a list of file names
-	 Last modified: 11/29/14
+	 Last modified: 11/29/14, J.Nordstrom
 	 */
 	socket.on('getAvailableFiles', function(callback) {
 		console.log('Request for files received');
@@ -162,39 +163,58 @@ io.on('connection', function(socket) {
 
 		callback(names);
 	});
-	socket.on('getFile', fileName, editMode, function(callback) {
+	/**
+	 * Event *
+	getFile:
+		Parameters:
+			- fileName
+			- editMode, if it is in editing mode
+			- callback, the callback function
+	Last modified: 11/30/14, J.Nordstrom
+	 */
+	socket.on('getFile', function(fileName, editMode, callback) {
 		console.log('Request for ' + fileName + ' received');
 
 		if (editMode) {
 			// User wants to edit this file
 			//TODO: Should the editor join the file room?
+			
 		} else {
 			// User wants to listen to this file, add the user to the listener room of this file
 			socket.join(fileName);
-			// Return the text of the file to the client
-			callback(fileHandler.getFile('./files/', fileName));
-			//TODO: 11/29/14 Continue here!!!
+			console.log('ID, ' + socket.id + ' joined the room "' + fileName);
 		}
-		fileHandler.getFile('./files/', fileName);
+
+		// Return the whole text file to user
+//TODO: Implement this line		callback(fileHandler.getFile('./files/', fileName));
+		callback('File test data');
+	});
+	/**
+	 * Event *
+	newChar:
+	 	Parameters:
+			- keyVal, the value of the key that was pressed
+			- index, index of the marker when the key was pressed
+			- callback, the callback function that will confirm if the 
+				operation was successful
+	Last modified: 11/30/14, J.Nordstrom
+	 */
+	socket.on('newChar', function(keyVal, callback) {
+	
 	});
 });
 
 /**
 start:
 	- Starts up the server with configured settings
-Last modified: 11/29/14
+Last modified: 11/29/14, J.Nordstrom
  */
 function start() {
 	console.log("##### Server started #####");
-
-	//TODO: Write logic for what is happening when a client is connecting
-
-	//TODO: Write logic for what is happening when we recieve an event
-
+	// Start listen on port
 	server.listen(PORT, function() {
 		console.log('Server is listening on port ' + PORT);	
 	});
-
 }
 
 exports.start = start;
