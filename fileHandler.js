@@ -8,8 +8,8 @@ updateDirectory function appends EMPTY CHARACTERS into the list.
 -----------------------------------------------------------------
 Description:
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.2
-Last Update: 11/16/14
+Version: 0.0.3
+Last Update: 11/25/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - existsFile
@@ -54,10 +54,11 @@ function existsFile(path) {
 }
 /**
 listFiles:
-- Will create an dictionary of all available files on the local server
+- Will create a dictionary of all available files on the local server
 - Uses a master file, MASTERLOG, as a record of all available files available to the localhost server
-- localHost server may update MASTERLOG using additional functions such as "AddFiles" [TODO] which will write to MASTERLOG
+- localHost server may update MASTERLOG using additional functions such as "AddFiles" which will write to MASTERLOG
 - @param path: the local directory to MASTERLOG.txt
+- @return localFiles - the array containing all files in the current directory
 */
 function listFiles(path){
 	if(path){
@@ -69,11 +70,15 @@ function listFiles(path){
 		for (i = 0; i < localFiles.length -1; i++){
 			localFiles[i] = localFiles[i].trim();
 		}
-		//TODO Test localFiles integrity
+		//UPDATE 11/25/14
+		return localFiles;
+		// Test localFiles integrity
+		/*
 		process.stdout.write("localFiles INTEGRITY TEST: TODO \n");
 		for (i = 0; i < localFiles.length - 1; i++){
 			process.stdout.write("Key " + i + ": " + localFiles[i] + "\n");
 		}
+		*/
 	}
 	else{
 		process.stdout.write("Enter the directory of MASTERLOG.txt");

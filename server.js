@@ -8,7 +8,7 @@ Known Bugs:
 -----------------------------------------------------------------
 Description:
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.2
+Version: 0.0.3
 Last Update: 11/16/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
@@ -23,6 +23,9 @@ var express = require('express');
 var app = express();
 var http = require('http');
 var fileHandler = require('./fileHandler.js');
+
+//global variable(s)
+var users;
 
 const PORT = 8888;
 
@@ -105,11 +108,30 @@ app.get('/files/:name/:cmd', function(req, res) {
 function start() {
 	console.log("##### Server started #####");
 	var server = http.createServer(app);
-
 	// Will be executed when a user is being connected
+	// LAST MODIFIED 11/28/14
+	var sockInstance;
 	server.on('connection', function(socket) {
+		//socket is of object type net.Socket
+		sockInstance = socket;
+		//socket module:
+		//socket.address().address : returns IP
+		//socket.address().port : returns PORT
 		console.log('\nNew connection:\n\tIP: ' + socket.address().address + '\n\tPort: ' +
 			socket.address().port + '\n');
+		
+	//MODIFIED 11/25/14
+	//newConnect()
+	//Adds the user nickname to User[nickname] = conn  {POINTER TO CONNECTION INSTANCE}
+	//@param nickname - string containing users nickname
+	//@return - TRUE for successful assignment of User to connection instance; else FALSE
+	server.on('newConnect', function(nickname){
+		if(users[nickname]){
+		
+		}
+		else{
+			users[nickname] = sockInstance;
+		}
 	});
 
 	// Will be fired when a client sends an character update
@@ -117,7 +139,9 @@ function start() {
 		console.log('charUpdate has been called\n\tValue of character: ' +
 			character + '\n\tValue of index: ' + index);
 	});
-
+	});
+	
+	
 	//TODO: Write logic for what is happening when a client is connecting
 
 	//TODO: Write logic for what is happening when we recieve an event
