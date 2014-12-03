@@ -141,6 +141,7 @@ connection:
 Last modified: 11/30/14, J.Nordstrom
  */
 io.on('connection', function(socket) {
+	var interval; // Will hold the timer function
 	console.log('\nNew connection:\n\tID: ' + socket.id + '\n');
 	socket.emit('successfulConnection', socket.id);
 
@@ -168,7 +169,7 @@ io.on('connection', function(socket) {
 	socket.on('isEditable', function(fileName, callback) {
 		//TODO: Implement in fileHandler which checks if file is being edited
 		//callback(fileHandler.isBeingEdited('/files/', fileName));
-		callback(false);
+		callback(true);
 	});
 	/**
 	 * Event *
@@ -185,29 +186,55 @@ io.on('connection', function(socket) {
 		if (editMode) {
 			// User wants to edit this file
 			//TODO: Should the editor join the file room?
+			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
+			callback("Hello world! This is just a sample text from server");
 			
 		} else {
 			// User wants to listen to this file, add the user to the listener room of this file
 			socket.join(fileName);
-			console.log('ID, ' + socket.id + ', joined the room "' + fileName);
+			console.log('ID, ' + socket.id + ', joined the room "' + fileName + '"');
 		}
+
+		// Set the interval of the timer to execute every 60 seconds
+		interval = setInterval(function() {
+			console.log('Update is being sent to the listeners...');
+			//TODO: Finish up the timer
+			// Get the update from the fileHandler for the specified file
+//			socket.emit('newChar', fileHandler.getFile('./files/', fileName));
+			socket.emit('newChar', "Timer data");
+
+		}, 3000);
+
 
 		// Return the whole text file to user
 //TODO: Implement this line		callback(fileHandler.getFile('./files/', fileName));
-		callback('File test data');
+		callback('File test data'); // Remove this line when above line is implemented
 	});
 	/**
 	 * Event *
 	newChar:
 	 	Parameters:
-			- keyVal, the value of the key that was pressed
-			- index, index of the marker when the key was pressed
+			- keyVal, the value of the key (ASCII) that was pressed
+			- index, index of the cursor when the key was pressed
 			- callback, the callback function that will confirm if the 
 				operation was successful
-	Last modified: 11/30/14, J.Nordstrom
+	Last modified: 12/3/14, J.Nordstrom
 	 */
-	socket.on('newChar', function(keyVal, callback) {
-	
+	socket.on('newChar', function(keyVal, index, callback) {
+		//TODO: Call appropriate function at the fileHandler
+		callback(true);
+	});
+	/**
+	 * Event *
+	disconnect:
+		Parameters:
+		Description:
+			Fires when a user disconnects
+	Last modified: 12/3/14, J.Nordstrom
+	 */
+	socket.on('disconnect', function() {
+		// Clear the interval if it is set
+		clearInterval(interval);
 	});
 });
 
@@ -221,6 +248,7 @@ function start() {
 	// Start listen on port
 	server.listen(PORT, function() {
 		console.log('Server is listening on port ' + PORT);	
+
 	});
 }
 

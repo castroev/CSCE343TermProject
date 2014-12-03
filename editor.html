@@ -73,6 +73,8 @@
 					socket.emit('getFile', args[2], editMode, function(data) {
 						// The callback will receive the text file
 						$('#inputText').attr('value', data);
+
+						$('#output').html('You are in edit mode<br />Please edit file, ' + args[2] + '.');
 					});
 
 				} else {
@@ -84,9 +86,9 @@
 					$('#output').html('You are in read mode<br />Listening to file, ' + args[2] + 
 							'.<br />Waiting for updates...<br />');
 					
-					socket.emit('getFile', args[2], editMode, function() {
+					socket.emit('getFile', args[2], editMode, function(data) {
 						// The callback will receive the text file
-						$('#inputText').attr('value', data);
+						$('#inputText').val(data);
 					});
 				}
 
@@ -94,8 +96,10 @@
 				 Event newChar
 				 - Will be fired when there is a new update in the file
 				*/
-				socket.on('newChar', function(arg) {
-					
+				socket.on('newChar', function(data) {
+					// Update the whole text editor with the new data
+					$('#inputText').val(data);
+					$('#output').html('New data has been received');
 				});
 
 				/**
@@ -106,6 +110,15 @@
 				$('#inputText').keypress(function(event) {
 					// Key is pressed, send update to server
 					//TODO: Implement the newChar call, with the parameters keyVal, index and callback
+					var pos = window.getSelection().getRangeAt(0).startOffset;
+					socket.emit('newChar', event.which, pos, function callback(valid) {
+						// See if the update is valid
+						if (valid) {
+							$('#output').html('Updated was successful');
+						} else {
+							$('#output').html('Update failed');
+						}
+					});
 				});
 				/**
 				  Event #exitButton.click
