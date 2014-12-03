@@ -9,6 +9,19 @@
 				height: 200px;
 
 			}
+			#output {
+				width: 450px;
+				margin: 7px;
+				padding: 6px;
+				background-color: #333;
+				color: #F00;
+				font-size: 12px;
+				font-family: 'Monospace';
+				border-style: solid;
+				border-width: 1px;
+				border-color: #000;
+			}
+
 		</style>
 	</head>
 
@@ -20,11 +33,17 @@
 		<main>
 			<textarea id="inputText">
 			</textarea>
+
+			<br />
+
 			<button id="exitButton">
-				Done
+				Exit
 			</button>
-			<div id="infoBox">
-			</div>
+			
+			<br />
+			<br />
+			<br />
+
 			<div id="output">
 			</div>
 		</main>
@@ -46,8 +65,11 @@
 				if (args.length == 4) {
 					// cmd is passed, decide which command it is
 					editMode = true;
-					$('#output').html(args.length);
-					$('#infoBox').html('You are in editing mode.');
+
+					// Inform user
+					$('#output').html('You are in editing mode<br />Editing file, ' + args[2] + 
+						'.<br />');
+
 					socket.emit('getFile', args[2], editMode, function(data) {
 						// The callback will receive the text file
 						$('#inputText').attr('value', data);
@@ -57,7 +79,10 @@
 					// No cmd is passed, default is read mode
 					editMode = false;
 					$('#inputText').attr('readonly', 'readonly');
-					$('#infoBox').html('You are in read mode.');
+
+					// Inform user
+					$('#output').html('You are in read mode<br />Listening to file, ' + args[2] + 
+							'.<br />Waiting for updates...<br />');
 					
 					socket.emit('getFile', args[2], editMode, function() {
 						// The callback will receive the text file

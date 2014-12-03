@@ -23,7 +23,6 @@ var express = require('express');
 var app = express();
 var http = require('http');
 var events = require('events');
-var eventEmitter = new events.EventEmitter();
 var server = http.Server(app);
 var io = require('socket.io')(server);
 var fileHandler = require('./fileHandler.js');
@@ -52,11 +51,6 @@ app.get('/', function(req, res) {
 			console.log(err);
 			res.status(err.status).end();
 		} else {
-			//MODIFICATION 11/16/14
-			//POPULATE LOCALFILES from MASTERLOG
-			// "./files/" - local files directory of server
-//			fileHandler.listFiles('./files/'); //TODO: This call will be made in a successful connection
-			//---------------------
 			console.log('Sent: index.html');
 		}
 	});
@@ -165,6 +159,19 @@ io.on('connection', function(socket) {
 	});
 	/**
 	 * Event *
+	isEditable:
+		-Parameters:
+			-fileName
+			-callback, the callback function which returns if file is editable
+	Last modified: 11/30/14, J.Nordstrom
+	 */
+	socket.on('isEditable', function(fileName, callback) {
+		//TODO: Implement in fileHandler which checks if file is being edited
+		//callback(fileHandler.isBeingEdited('/files/', fileName));
+		callback(false);
+	});
+	/**
+	 * Event *
 	getFile:
 		Parameters:
 			- fileName
@@ -182,7 +189,7 @@ io.on('connection', function(socket) {
 		} else {
 			// User wants to listen to this file, add the user to the listener room of this file
 			socket.join(fileName);
-			console.log('ID, ' + socket.id + ' joined the room "' + fileName);
+			console.log('ID, ' + socket.id + ', joined the room "' + fileName);
 		}
 
 		// Return the whole text file to user

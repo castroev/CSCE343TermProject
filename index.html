@@ -7,13 +7,33 @@
 			body {
 				background-color: #F0F0F0;
 			}
+			#files {
+				margin: 5px;
+			}
+			#output {
+				width: 450px;
+				margin: 7px;
+				padding: 6px;
+				background-color: #333;
+				color: #FF0000;
+				font-size: 12px;
+				font-family: 'Monospace';
+				border-style: solid;
+				border-width: 1px;
+				border-color: #000;
+			}
 		</style>
 	</head>
 	<body>
 		<header>
-			<h1>Hello, world!</h1>
+			<h1>File Editor's choice!</h1>
 		</header>
 
+		Please select a file to read or edit:<br />
+		<select id="files">
+		</select>
+
+		<br />
 		<button id="editFile"> 
 			Edit File
 		</button>
@@ -22,9 +42,8 @@
 		</button>
 
 		<br />
-		<select id="files">
-
-		</select>
+		<br />
+		<br />
 
 		<div id="output">
 		</div>
@@ -55,10 +74,20 @@
 				});
 				
 				$('#editFile').click(function() {
-					//TODO: Add appropriate url cmd.
-					window.location.href = '/files/' + $('#files').val();
+					// Validate that selected file can be edited
+					socket.emit('isEditable', $('#files').val(), function(isEditable) {
+						if (isEditable) {
+							// File is valid to be edited
+							//TODO: Add appropriate url cmd
+							window.location.href = '/files/' + $('#files').val();
+						} else {
+							// File can not be edited, inform user
+							$('#output').html($('#files').val() + ' cannot be edited right now.');
+						}
+					});
 				});
 				$('#readFile').click(function() {
+					// A user can always listening to a file, redirect to listener
 					window.location.href = '/files/' + $('#files').val();
 				});
 			});
