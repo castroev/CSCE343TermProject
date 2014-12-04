@@ -7,9 +7,10 @@ Known Bugs:
 
 -----------------------------------------------------------------
 Description:
+- added fileHandler calls where fileHandler EVENT CALL stubs located
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.2
-Last Update: 11/16/14
+Version: 0.0.4
+Last Update: 12/04/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - start
@@ -178,6 +179,7 @@ io.on('connection', function(socket) {
 			- fileName
 			- editMode, if it is in editing mode
 			- callback, the callback function
+<<<<<<< HEAD
 	Last modified: 11/30/14, J.Nordstrom
 	 */
 	socket.on('getFile', function(fileName, editMode, callback) {
@@ -187,11 +189,40 @@ io.on('connection', function(socket) {
 			// User wants to edit this file
 			//TODO: Should the editor join the file room?
 			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
+=======
+	Last modified: 12/03/14, J.Nordstrom; Ermenildo V. Castro, Jr.
+	 */
+	socket.on('getFile', function(fileName, editMode, callback) {
+		console.log('Request for ' + fileName + ' received');
+		
+		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
+		// appended AND logical operator to check if fileName is
+		//		available for edit.
+		// && fileHandler.isBeingEdited('/files/', fileName)
+		// **NOTE**
+		// PATH parameter is deprecated
+		// ********
+		if (editMode && fileHandler.isBeingEdited('/files/', fileName)) {
+			// User wants to edit this file
+			//TODO: Should the editor join the file room?
+			// Response to J.Nordstrom: Ermenildo V. Castro, Jr.
+			// 		YES, use trackClient in fileHandler
+			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
+			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+			fileHandler.trackClient(fileName, socket, "ADDE");
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe
 			callback("Hello world! This is just a sample text from server");
 			
 		} else {
 			// User wants to listen to this file, add the user to the listener room of this file
 			socket.join(fileName);
+<<<<<<< HEAD
+=======
+			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+			if(!fileHandler.trackClient(fileName, socket, "ADDL")){
+				console.log("\n!!!!!!!!!!!!FALSE TRACKCLIENT!!!!!!!!\n");
+			}
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe
 			console.log('ID, ' + socket.id + ', joined the room "' + fileName + '"');
 		}
 
@@ -233,6 +264,13 @@ io.on('connection', function(socket) {
 	Last modified: 12/3/14, J.Nordstrom
 	 */
 	socket.on('disconnect', function() {
+<<<<<<< HEAD
+=======
+		//MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+		// clear the client from current room
+		fileHandler.trackClient(null, socket, "REMOVE");
+		
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe
 		// Clear the interval if it is set
 		clearInterval(interval);
 	});
