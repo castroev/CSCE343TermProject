@@ -186,11 +186,14 @@ io.on('connection', function(socket) {
 		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
 		// appended AND logical operator to check if fileName is
 		//		available for edit.
-		// TODO: && fileHandler.isBeingEdited('/files/', fileName)
-		if (editMode) {
+		// && fileHandler.isBeingEdited('/files/', fileName)
+		// **NOTE**
+		// PATH parameter is deprecated
+		// ********
+		if (editMode && fileHandler.isBeingEdited('/files/', fileName)) {
 			// User wants to edit this file
 			//TODO: Should the editor join the file room?
-			// Response to TODO, Ermenildo V. Castro, Jr.
+			// Response to J.Nordstrom: Ermenildo V. Castro, Jr.
 			// 		YES, use trackClient in fileHandler
 			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
 			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
@@ -245,6 +248,10 @@ io.on('connection', function(socket) {
 	Last modified: 12/3/14, J.Nordstrom
 	 */
 	socket.on('disconnect', function() {
+		//MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+		// clear the client from current room
+		fileHandler.trackClient(null, socket, "REMOVE");
+		
 		// Clear the interval if it is set
 		clearInterval(interval);
 	});

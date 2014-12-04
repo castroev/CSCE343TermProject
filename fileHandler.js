@@ -205,7 +205,7 @@ function updateDirectory(cmd, fname, path, data){
 }
 
 // TO IMPLEMENT 12/03/14-----------------------------------------------------------------------------------------
-// SATISFY SERVER EVENT CALLS:
+// SATISFY SERVER SPECIFIED EVENT CALLS:
 /**
 	 * Event *
 	newChar:
@@ -227,9 +227,10 @@ function updateDirectory(cmd, fname, path, data){
 	//callback(fileHandler.isBeingEdited('/files/', fileName));
 	Last modified: 11/30/14, J.Nordstrom
 	 */
+// END SERVER SPECIFIED EVENT CALLS ----------------------------------
 /*
-FILEHANDLER OBJECTIVES:
-1. Implement specified requests from SERVER (12/03/14 specifications)
+FILEHANDLER OBJECTIVES 12/03/14 - 12/04/14:
+1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
 2. HTML page FILE SELECT buttons
 		calls to HTML Generation w/ fileText upload
 3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
@@ -242,10 +243,20 @@ FILEHANDLER OBJECTIVES:
 isBeingEdited
 - Function determines if the specified file is being edited by a client
 @param path - a string to the file directory of the server
+	**NOTE** 
+	DEPRECATE @param path
+	********
 @param fileName - a string containing the specified fileName
 @return - TRUE if file is being edited; FALSE if file is available to be edited
 */
 function isBeingEdited(path, fileName){
+	for(i = 0; i < 20; i++){
+		if(rooms[fileName][i] != "*" && rooms[fileName][i].type == "EDITOR"){
+			process.stdout.write(fileName + " is being edited by " + rooms[fileName][i].sckt.id + "\n");
+			return true;
+		}
+	}
+	process.stdout.write(fileName + " available for edit.");
 	return false;
 }
 //END isBeingEdited--------------------------------------
@@ -265,9 +276,9 @@ trackClient
 */
 function trackClient(fileName, socket, cmd){
 	process.stdout.write("\nTrackClient Called: \n");
-	if(!existsFile(fileName) || !socket || !cmd ){
-		process.stdout.write("Invalid Arguments, trackClient: " + fileName + "\n" + socket + "\n" + cmd + "\n");
-		return false;
+	if((!existsFile(fileName) && cmd != "REMOVE") || !socket || !cmd ){
+		process.stdout.write("Invalid Arguments, trackClient: \n" + fileName + "\n" + socket + "\n" + cmd + "\n");
+		//return false;
 	}
 	// nClient object to retain client information
 	var nClient = {
@@ -297,13 +308,14 @@ function trackClient(fileName, socket, cmd){
 	}
 	else if(cmd.toUpperCase() == "REMOVE"){
 		process.stdout.write("\n REMOVE EXECUTE: \n");
-		var cPos = findClient(fileName, socket);
+		var cPos = findClient(socket);
 		if (cPos == -1){return false;} // error condition
-		rooms[fileName].splice(cPos, 1);
+		process.stdout.write("\n CPos: "+ cPos +" \n");
+		rooms[cPos[0]].splice(cPos[1], 1);
 		process.stdout.write("Removed Client: \nID:" + nClient.sckt.id + "\n fileName: " + fileName + "\n RoomIndex: " + cPos + "\n");
 		return true;
 	}
-	process.stdout.write("\n INVALID COMMAND ARGUMENT: "+ cmd +" \n");
+	//process.stdout.write("\n INVALID COMMAND ARGUMENT: "+ cmd +" \n");
 	return false;
 }
 //END trackClient----------------------------------------
@@ -325,17 +337,27 @@ function getAvailableRoom(room){
 
 /*
 findClient
-Searches the room for the designated socket
+Searches the rooms for the designated socket
 @param room - room namespace
 @param sckt - socket of the client
-@return - the index of the socket within the room; else -1
-// presuming valid sckt and room
+@return - an array containing location info
+	argR[0] = namespace
+	argR[1] = roomNumber
+	-1 = error occurred
+// presuming valid sckt
 // private function
 */
-function findClient(room, sckt){
-	for(i=0; i < 20; i++){
-		if(rooms[room][i].sckt == sckt){
-			return i;
+function findClient(sckt){
+	var room;
+	var argR = new Array(2);
+	for(j = 0; j < localFiles.length -1; j++){
+		room = localFiles[j];
+		for(i=0; i < 20; i++){
+			if(rooms[room][i].sckt == sckt){
+				argR[0] = room;
+				argR[1] = i;
+				return argR;
+			}
 		}
 	}
 	return -1;
@@ -354,3 +376,4 @@ exports.existsFile = existsFile;
 exports.listFiles = listFiles;
 exports.updateDirectory = updateDirectory;
 exports.trackClient = trackClient;
+exports.isBeingEdited = isBeingEdited
