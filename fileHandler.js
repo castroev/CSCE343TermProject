@@ -91,7 +91,10 @@ function listFiles(path){
 			//process.stdout.write("Room Key: " + rooms[localFiles[i]][0] + "\n");
 			// END TEST CODE----------------------------
 		}
+<<<<<<< HEAD
+=======
 		
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe
 
 		return localFiles;
 	}
@@ -379,5 +382,8 @@ function findClient(sckt){
 exports.existsFile = existsFile;
 exports.listFiles = listFiles;
 exports.updateDirectory = updateDirectory;
+<<<<<<< HEAD
+=======
 exports.trackClient = trackClient;
 exports.isBeingEdited = isBeingEdited
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe

@@ -69,7 +69,11 @@
 					// Inform user
 					$('#output').html('You are in editing mode<br />Editing file, ' + args[2] + 
 						'.<br />');
+<<<<<<< HEAD
+
+=======
 					// args[2] contains fileName
+>>>>>>> d65a3f173301b929a31f457f4e7ad0d4b09164fe
 					socket.emit('getFile', args[2], editMode, function(data) {
 						// The callback will receive the text file
 						$('#inputText').attr('value', data);
