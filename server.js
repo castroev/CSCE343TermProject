@@ -169,8 +169,8 @@ io.on('connection', function(socket) {
 	 */
 	socket.on('isEditable', function(fileName, callback) {
 		//TODO: Implement in fileHandler which checks if file is being edited
-		//callback(fileHandler.isBeingEdited('/files/', fileName));
-		callback(true);
+		callback(fileHandler.isBeingEdited('/files/', fileName));
+		//callback(true);
 	});
 	/**
 	 * Event *

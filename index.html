@@ -76,7 +76,7 @@
 				$('#editFile').click(function() {
 					// Validate that selected file can be edited
 					socket.emit('isEditable', $('#files').val(), function(isEditable) {
-						if (isEditable) {
+						if (!isEditable) {
 							// File is valid to be edited
 							//TODO: Add appropriate url cmd
 							window.location.href = '/files/' + $('#files').val();

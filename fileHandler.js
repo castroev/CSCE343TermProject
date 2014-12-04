@@ -18,8 +18,7 @@ Available Program Functions:
 - updateDirectory
 - isBeingEdited
 - trackClient
-
-- openFile TODO
+- getBuffer
 -----------------------------------------------------------------
 References:
 SmashingJsNode;
@@ -78,10 +77,10 @@ function listFiles(path){
 		// replaced INTEGRITY TEST.
 		// Populate ROOMS datastructure
 		process.stdout.write("POPULATE ROOMS: \n");
-		rooms = new Array(localFiles.length);
+		rooms = new Array();
 		for (i = 0; i < localFiles.length; i++){
 			rooms.push(localFiles[i]);
-			rooms[localFiles[i]] = new Array(20); //20 max listeners/editors
+			rooms[localFiles[i]] = new Array(21); //20 max listeners/editors; last index will store the file buffer
 			for(j = 0; j < 20; j ++){
 				rooms[localFiles[i]][j] = "*";//NULL VALUE
 			}
@@ -92,6 +91,24 @@ function listFiles(path){
 			// END TEST CODE----------------------------
 		}
 		
+		// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+		// Construct file buffer
+		for(k = 0; k < localFiles.length; k++){
+			if(!openFile(path, localFiles[k])){
+				process.stdout.write("\n!!!!!!! ERROR OPENING FILE!!!!!!!\n");
+			}
+			else{process.stdout.write("\n Created Buffer: " + localFiles[k]+"\n")
+				/*
+				// TEST CODE
+				process.stdout.write("char contents: " + localFiles[k] + "\n" );
+				for(j = 0; j < rooms[localFiles[k]][20].length; j++){
+					process.stdout.write("CHAR: " + rooms[localFiles[k]][20][j] + "\n");
+				}
+				*/
+			}
+		}
+		
+		
 
 		return localFiles;
 	}
@@ -100,6 +117,36 @@ function listFiles(path){
 		process.stdout.write("./files/ <--- local directory of server");
 		return;
 	}
+}
+/*
+openFile
+- reads the file, then creates a buffer datastructure
+@param path - location of file
+@param fileName - name of the file
+@return TRUE for success; FALSE for fail
+*/
+function openFile(path, fileName){
+	//process.stdout.write("openFile called.");
+	var content = fs.readFileSync(path + fileName, "utf8");//blocking process
+	if(!content){ // error condition
+		return false;
+	}
+	//process.stdout.write("\n FILE CONTENT: " + fileName + "\n" + content);
+	rooms[fileName][20] = content;
+	return true;
+}
+
+/*
+getBuffer
+- get ACCESSOR
+@param fileName - name of the file to retrieve buffer from
+@return - the buffer for the specified file; else FALSE
+*/
+function getBuffer(fileName){
+	if(!existsFile(fileName)){
+		return false;
+	}
+	return rooms[fileName][20];
 }
 /**
 contains
@@ -380,4 +427,5 @@ exports.existsFile = existsFile;
 exports.listFiles = listFiles;
 exports.updateDirectory = updateDirectory;
 exports.trackClient = trackClient;
-exports.isBeingEdited = isBeingEdited
+exports.isBeingEdited = isBeingEdited;
+exports.getBuffer = getBuffer;
