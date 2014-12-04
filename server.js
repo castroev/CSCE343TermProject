@@ -9,10 +9,10 @@ Known Bugs:
 Description:
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
 Version: 0.0.3
-Last Update: 11/16/14
+Last Update: 12/03/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
-
+- start
 -----------------------------------------------------------------
 References:
 SmashingJsNode;
@@ -22,10 +22,10 @@ StackOverflow;
 var express = require('express');
 var app = express();
 var http = require('http');
+var events = require('events');
+var server = http.Server(app);
+var io = require('socket.io')(server);
 var fileHandler = require('./fileHandler.js');
-
-//global variable(s)
-var users;
 
 const PORT = 8888;
 
@@ -51,11 +51,6 @@ app.get('/', function(req, res) {
 			console.log(err);
 			res.status(err.status).end();
 		} else {
-			//MODIFICATION 11/16/14
-			//POPULATE LOCALFILES from MASTERLOG
-			// "./files/" - local files directory of server
-			fileHandler.listFiles('./files/');
-			//---------------------
 			console.log('Sent: index.html');
 		}
 	});
@@ -72,9 +67,24 @@ app.get('/files/:name', function(req, res) {
 	//removed 'files/' append
 	if (fileHandler.existsFile(fileName)) {
 		// File name is valid
-		//TODO: Implement logic what happens when client tries to reach file
 		console.log('\tAbout to route "/file/' + fileName + '"');
-		res.send('Your are trying to get "' + fileName + '"');
+		var options = {
+			root: __dirname,
+			dotfiles: 'deny',
+			header: {
+				'x-timestamp': Date.now(),
+				'x-sent': true
+			}
+		};
+		res.sendFile('editor.html', options, function(err) {
+			if (err) {
+				// Error occurred when sending file
+				console.log(err);
+				res.status(err.status).end();
+			} else {
+				console.log('Sent: editor.html');
+			}
+		});
 	} else {
 		// File name is not valid, inform client
 		console.log('\tFile "' + 
@@ -94,7 +104,23 @@ app.get('/files/:name/:cmd', function(req, res) {
 	//Local path set to default ./files/
 	if (fileHandler.updateDirectory(cmd, fileName, "./files/")) {
 		// File name is valid
-		res.send('You updated: "' + fileName + '"');
+		var options = {
+			root: __dirname,
+			dotfiles: 'deny',
+			header: {
+				'x-timestamp': Date.now(),
+				'x-sent': true
+			}
+		};
+		res.sendFile('editor.html', options, function(err) {
+			if (err) {
+				// Error occurred when sending file
+				console.log(err);
+				res.status(err.status).end();
+			} else {
+				console.log('Sent: editor.html');
+			}
+		});
 	} else {
 		// File name is not valid, inform client
 		console.log('\tFile "' + 
@@ -104,51 +130,138 @@ app.get('/files/:name/:cmd', function(req, res) {
 	
 });
 
+/*
+ * Event *
+connection:
+	- Will be fired when a host connects a socket to the server
+	- Display information about the client to the log
+	- Emits the event successfulConnection
+	- Inner Events:
+		- getAvailableFiles
+Last modified: 11/30/14, J.Nordstrom
+ */
+io.on('connection', function(socket) {
+	var interval; // Will hold the timer function
+	console.log('\nNew connection:\n\tID: ' + socket.id + '\n');
+	socket.emit('successfulConnection', socket.id);
 
+	/**
+	 * Event *
+	 getAvailableFiles:
+	 	Parameter:
+			- A callback function which takes a list of file names
+	 Last modified: 11/29/14, J.Nordstrom
+	 */
+	socket.on('getAvailableFiles', function(callback) {
+		console.log('Request for files received');
+		var names = fileHandler.listFiles('./files/');
+
+		callback(names);
+	});
+	/**
+	 * Event *
+	isEditable:
+		-Parameters:
+			-fileName
+			-callback, the callback function which returns if file is editable
+	Last modified: 11/30/14, J.Nordstrom
+	 */
+	socket.on('isEditable', function(fileName, callback) {
+		//TODO: Implement in fileHandler which checks if file is being edited
+		//callback(fileHandler.isBeingEdited('/files/', fileName));
+		callback(true);
+	});
+	/**
+	 * Event *
+	getFile:
+		Parameters:
+			- fileName
+			- editMode, if it is in editing mode
+			- callback, the callback function
+	Last modified: 12/03/14, J.Nordstrom; Ermenildo V. Castro, Jr.
+	 */
+	socket.on('getFile', function(fileName, editMode, callback) {
+		console.log('Request for ' + fileName + ' received');
+		
+		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
+		// appended AND logical operator to check if fileName is
+		//		available for edit.
+		// TODO: && fileHandler.isBeingEdited('/files/', fileName)
+		if (editMode) {
+			// User wants to edit this file
+			//TODO: Should the editor join the file room?
+			// Response to TODO, Ermenildo V. Castro, Jr.
+			// 		YES, use trackClient in fileHandler
+			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
+			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+			fileHandler.trackClient(fileName, socket, "ADDE");
+			callback("Hello world! This is just a sample text from server");
+			
+		} else {
+			// User wants to listen to this file, add the user to the listener room of this file
+			socket.join(fileName);
+			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
+			if(!fileHandler.trackClient(fileName, socket, "ADDL")){
+				console.log("\n!!!!!!!!!!!!FALSE TRACKCLIENT!!!!!!!!\n");
+			}
+			console.log('ID, ' + socket.id + ', joined the room "' + fileName + '"');
+		}
+
+		// Set the interval of the timer to execute every 60 seconds
+		interval = setInterval(function() {
+			console.log('Update is being sent to the listeners...');
+			//TODO: Finish up the timer
+			// Get the update from the fileHandler for the specified file
+//			socket.emit('newChar', fileHandler.getFile('./files/', fileName));
+			socket.emit('newChar', "Timer data");
+
+		}, 3000);
+
+
+		// Return the whole text file to user
+//TODO: Implement this line		callback(fileHandler.getFile('./files/', fileName));
+		callback('File test data'); // Remove this line when above line is implemented
+	});
+	/**
+	 * Event *
+	newChar:
+	 	Parameters:
+			- keyVal, the value of the key (ASCII) that was pressed
+			- index, index of the cursor when the key was pressed
+			- callback, the callback function that will confirm if the 
+				operation was successful
+	Last modified: 12/3/14, J.Nordstrom
+	 */
+	socket.on('newChar', function(keyVal, index, callback) {
+		//TODO: Call appropriate function at the fileHandler
+		callback(true);
+	});
+	/**
+	 * Event *
+	disconnect:
+		Parameters:
+		Description:
+			Fires when a user disconnects
+	Last modified: 12/3/14, J.Nordstrom
+	 */
+	socket.on('disconnect', function() {
+		// Clear the interval if it is set
+		clearInterval(interval);
+	});
+});
+
+/**
+start:
+	- Starts up the server with configured settings
+Last modified: 11/29/14, J.Nordstrom
+ */
 function start() {
 	console.log("##### Server started #####");
-	var server = http.createServer(app);
-	// Will be executed when a user is being connected
-	// LAST MODIFIED 11/28/14
-	var sockInstance;
-	server.on('connection', function(socket) {
-		//socket is of object type net.Socket
-		sockInstance = socket;
-		//socket module:
-		//socket.address().address : returns IP
-		//socket.address().port : returns PORT
-		console.log('\nNew connection:\n\tIP: ' + socket.address().address + '\n\tPort: ' +
-			socket.address().port + '\n');
-		
-	//MODIFIED 11/25/14
-	//newConnect()
-	//Adds the user nickname to User[nickname] = conn  {POINTER TO CONNECTION INSTANCE}
-	//@param nickname - string containing users nickname
-	//@return - TRUE for successful assignment of User to connection instance; else FALSE
-	server.on('newConnect', function(nickname){
-		if(users[nickname]){
-		
-		}
-		else{
-			users[nickname] = sockInstance;
-		}
+	// Start listen on port
+	server.listen(PORT, function() {
+		console.log('Server is listening on port ' + PORT);	
+
 	});
-
-	// Will be fired when a client sends an character update
-	server.on('charUpdate', function(character, index) {
-		console.log('charUpdate has been called\n\tValue of character: ' +
-			character + '\n\tValue of index: ' + index);
-	});
-	});
-	
-	
-	//TODO: Write logic for what is happening when a client is connecting
-
-	//TODO: Write logic for what is happening when we recieve an event
-
-	console.log('Server starts listening on port ' + PORT);
-	server.listen(PORT);
-
 }
 
 exports.start = start;

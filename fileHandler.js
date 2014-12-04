@@ -9,7 +9,7 @@ updateDirectory function appends EMPTY CHARACTERS into the list.
 Description:
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
 Version: 0.0.3
-Last Update: 11/25/14
+Last Update: 12/03/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - existsFile
@@ -24,6 +24,7 @@ StackOverflow;
 */
 var fs = require('fs');
 var localFiles;
+var rooms;
 /**
 MODIFIED 11/16/14
 - Determines if File exists in server local directory AND if File exists within the localFiles array
@@ -54,11 +55,10 @@ function existsFile(path) {
 }
 /**
 listFiles:
-- Will create a dictionary of all available files on the local server
+- Will create an dictionary of all available files on the local server
 - Uses a master file, MASTERLOG, as a record of all available files available to the localhost server
-- localHost server may update MASTERLOG using additional functions such as "AddFiles" which will write to MASTERLOG
+- localHost server may update MASTERLOG using additional functions such as "AddFiles" [TODO] which will write to MASTERLOG
 - @param path: the local directory to MASTERLOG.txt
-- @return localFiles - the array containing all files in the current directory
 */
 function listFiles(path){
 	if(path){
@@ -70,19 +70,31 @@ function listFiles(path){
 		for (i = 0; i < localFiles.length -1; i++){
 			localFiles[i] = localFiles[i].trim();
 		}
-		//UPDATE 11/25/14
-		return localFiles;
-		// Test localFiles integrity
-		/*
-		process.stdout.write("localFiles INTEGRITY TEST: TODO \n");
+		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
+		// replaced INTEGRITY TEST.
+		// Populate ROOMS datastructure
+		process.stdout.write("POPULATE ROOMS: \n");
+		rooms = new Array(localFiles.length);
 		for (i = 0; i < localFiles.length - 1; i++){
-			process.stdout.write("Key " + i + ": " + localFiles[i] + "\n");
+			rooms.push(localFiles[i]);
+			rooms[localFiles[i]] = new Array(20); //20 max listeners/editors
+			for(j = 0; j < 20; j ++){
+				rooms[localFiles[i]][j] = "*";//NULL VALUE
+			}
+			// TEST CODE--------------------------------
+			//rooms[localFiles[i]].push("SUCCESS TEST!");
+			//rooms[localFiles[i]][0] = "SUCESS TEST";
+			//process.stdout.write("Room Key: " + rooms[localFiles[i]][0] + "\n");
+			// END TEST CODE----------------------------
 		}
-		*/
+		
+
+		return localFiles;
 	}
 	else{
 		process.stdout.write("Enter the directory of MASTERLOG.txt");
 		process.stdout.write("./files/ <--- local directory of server");
+		return;
 	}
 }
 /**
@@ -192,6 +204,153 @@ function updateDirectory(cmd, fname, path, data){
 
 }
 
+// TO IMPLEMENT 12/03/14-----------------------------------------------------------------------------------------
+// SATISFY SERVER EVENT CALLS:
+/**
+	 * Event *
+	newChar:
+	 	Parameters:
+			- keyVal, the value of the key (ASCII) that was pressed
+			- index, index of the cursor when the key was pressed
+			- callback, the callback function that will confirm if the 
+				operation was successful
+				function(keyVal, index, callback)
+	Last modified: 12/3/14
+	 */
+/**
+	 * Event *
+	isEditable:
+		-Parameters:
+			-fileName
+			-callback, the callback function which returns if file is editable
+	/TODO: Implement in fileHandler which checks if file is being edited
+	//callback(fileHandler.isBeingEdited('/files/', fileName));
+	Last modified: 11/30/14, J.Nordstrom
+	 */
+/*
+FILEHANDLER OBJECTIVES:
+1. Implement specified requests from SERVER (12/03/14 specifications)
+2. HTML page FILE SELECT buttons
+		calls to HTML Generation w/ fileText upload
+3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
+		Handle disconnect/con close cases
+4. FH File watch; call Multicast for ON UPDATE
+5. FILE ROOM PAGE, multiple cursors
+*/
+//END DOCUMENTATION----------------------------------------------------------------------------------------------
+/*
+isBeingEdited
+- Function determines if the specified file is being edited by a client
+@param path - a string to the file directory of the server
+@param fileName - a string containing the specified fileName
+@return - TRUE if file is being edited; FALSE if file is available to be edited
+*/
+function isBeingEdited(path, fileName){
+	return false;
+}
+//END isBeingEdited--------------------------------------
+
+/*
+trackClient
+- Function will add Clients to datastructure to manage editors;
+- Modifies global structure, ROOMS: connections associated with each fileName, 2D array
+- 
+@param fileName - the file name of the file to be edited
+@param socket - socket object of client; unique client identity
+@param cmd: a string
+	- "ADDE" - will add the socket as an EDITOR for the file
+	- "ADDL" - will add the socket as a LISTENER for the file
+	- "REMOVE" - will remove the socket from the file
+@return - TRUE for successful addition, FALSE otherwise
+*/
+function trackClient(fileName, socket, cmd){
+	process.stdout.write("\nTrackClient Called: \n");
+	if(!existsFile(fileName) || !socket || !cmd ){
+		process.stdout.write("Invalid Arguments, trackClient: " + fileName + "\n" + socket + "\n" + cmd + "\n");
+		return false;
+	}
+	// nClient object to retain client information
+	var nClient = {
+		sckt: socket,
+		type: 'UNASSIGNED',
+	};
+	// call helper function
+	var rStatus = getAvailableRoom(fileName);
+	process.stdout.write("\n Room Status:" + rStatus +"\n");
+	if(cmd.toUpperCase() == "ADDE"){
+		process.stdout.write("\n ADDE EXECUTE: \n");
+		nClient.type = "EDITOR";
+		if (rStatus != -1){
+			rooms[fileName][rStatus] = nClient;
+			process.stdout.write("Added Client: \nID:" + nClient.sckt.id + "\n fileName: " + fileName + "\n RoomIndex: " + rStatus + "\n Type: " + nClient.type + "\n");
+			return true;
+		}
+	}
+	else if(cmd.toUpperCase() == "ADDL"){
+		process.stdout.write("\n ADDL EXECUTE: \n");
+		nClient.type = "LISTENER";
+		if (rStatus != -1){
+			rooms[fileName][rStatus] = nClient;
+			process.stdout.write("Added Client: \nID:" + nClient.sckt.id + "\n fileName: " + fileName + "\n RoomIndex: " + rStatus + "\n Type: " + nClient.type + "\n");
+			return true;
+		}
+	}
+	else if(cmd.toUpperCase() == "REMOVE"){
+		process.stdout.write("\n REMOVE EXECUTE: \n");
+		var cPos = findClient(fileName, socket);
+		if (cPos == -1){return false;} // error condition
+		rooms[fileName].splice(cPos, 1);
+		process.stdout.write("Removed Client: \nID:" + nClient.sckt.id + "\n fileName: " + fileName + "\n RoomIndex: " + cPos + "\n");
+		return true;
+	}
+	process.stdout.write("\n INVALID COMMAND ARGUMENT: "+ cmd +" \n");
+	return false;
+}
+//END trackClient----------------------------------------
+// getAvailableRoom(room)
+// acquires the index of an available space within the specified room;
+// private helper;
+// @param room - the room namespace
+// @return - an integer indicating the index of an available space; -1 for error
+function getAvailableRoom(room){
+	if(!room || !rooms[room]){return -1;} // error condition checking
+	for (i = 0; i < 20; i++){
+		if(rooms[room][i] == "*"){
+			return i;
+		}
+	}
+	return -1;
+}
+// END getAvailableRoom-----------------------------------
+
+/*
+findClient
+Searches the room for the designated socket
+@param room - room namespace
+@param sckt - socket of the client
+@return - the index of the socket within the room; else -1
+// presuming valid sckt and room
+// private function
+*/
+function findClient(room, sckt){
+	for(i=0; i < 20; i++){
+		if(rooms[room][i].sckt == sckt){
+			return i;
+		}
+	}
+	return -1;
+}
+// END findClient ------------------------------------------
+
+
+
+
+
+
+
+
+
 exports.existsFile = existsFile;
 exports.listFiles = listFiles;
 exports.updateDirectory = updateDirectory;
+exports.trackClient = trackClient;

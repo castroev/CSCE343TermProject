@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Editor</title>
+
+		<style>
+			#inputText {
+				width: 500px;
+				height: 200px;
+
+			}
+			#output {
+				width: 450px;
+				margin: 7px;
+				padding: 6px;
+				background-color: #333;
+				color: #F00;
+				font-size: 12px;
+				font-family: 'Monospace';
+				border-style: solid;
+				border-width: 1px;
+				border-color: #000;
+			}
+
+		</style>
+	</head>
+
+	<body>
+		<header>
+			<h1>Editor</h1>
+		</header>
+
+		<main>
+			<textarea id="inputText">
+			</textarea>
+
+			<br />
+
+			<button id="exitButton">
+				Exit
+			</button>
+			
+			<br />
+			<br />
+			<br />
+
+			<div id="output">
+			</div>
+		</main>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+			$(document).ready(function() {
+				// Document has been loaded, create a socket to server and to specific room for this file
+				var editMode = false;
+				// Create a new socket connected to the server
+				var socket = io.connect();
+
+				/*
+				* Find out if there are any commands passed
+				*/
+				var path = window.location.pathname;
+				var args = path.split('/');
+				if (args.length == 4) {
+					// cmd is passed, decide which command it is
+					editMode = true;
+
+					// Inform user
+					$('#output').html('You are in editing mode<br />Editing file, ' + args[2] + 
+						'.<br />');
+					// args[2] contains fileName
+					socket.emit('getFile', args[2], editMode, function(data) {
+						// The callback will receive the text file
+						$('#inputText').attr('value', data);
+
+						$('#output').html('You are in edit mode<br />Please edit file, ' + args[2] + '.');
+					});
+
+				} else {
+					// No cmd is passed, default is read mode
+					editMode = false;
+					$('#inputText').attr('readonly', 'readonly');
+
+					// Inform user
+					$('#output').html('You are in read mode<br />Listening to file, ' + args[2] + 
+							'.<br />Waiting for updates...<br />');
+					
+					socket.emit('getFile', args[2], editMode, function(data) {
+						// The callback will receive the text file
+						$('#inputText').val(data);
+					});
+				}
+
+				/**
+				 Event newChar
+				 - Will be fired when there is a new update in the file
+				*/
+				socket.on('newChar', function(data) {
+					// Update the whole text editor with the new data
+					$('#inputText').val(data);
+					$('#output').html('New data has been received');
+				});
+
+				/**
+				 Event #inputText.keypress
+				 - Will be fired when a key is pressed with the focus on the #inputText
+				 Last modified: 11/30/14, J.Nordstrom
+				*/
+				$('#inputText').keypress(function(event) {
+					// Key is pressed, send update to server
+					//TODO: Implement the newChar call, with the parameters keyVal, index and callback
+					var pos = window.getSelection().getRangeAt(0).startOffset;
+					socket.emit('newChar', event.which, pos, function callback(valid) {
+						// See if the update is valid
+						if (valid) {
+							$('#output').html('Updated was successful');
+						} else {
+							$('#output').html('Update failed');
+						}
+					});
+				});
+				/**
+				  Event #exitButton.click
+				  - Will be fired when the user wants to exit
+				  Last modified: 11/30/14, J.Nordstrom
+				 */
+				$('#exitButton').click(function() {
+					// The listeners will leave the socket room automatically when socket
+					// is being closed. Since each char is being updated continuously we
+					// can exit this page safely
+					window.location.replace('/');
+				});
+			});
+		</script>
+	</body>
+</html>
