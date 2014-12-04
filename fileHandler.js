@@ -7,14 +7,18 @@ updateDirectory function appends EMPTY CHARACTERS into the list.
 
 -----------------------------------------------------------------
 Description:
+- removed the array.length -1 appends FOR ALL; if errors occur, re-append
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.3
-Last Update: 12/03/14
+Version: 0.0.4
+Last Update: 12/04/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - existsFile
 - listFiles
 - updateDirectory
+- isBeingEdited
+- trackClient
+
 - openFile TODO
 -----------------------------------------------------------------
 References:
@@ -67,7 +71,7 @@ function listFiles(path){
 		//MASTERLOG IS CSV
 		localFiles = str.split(',');
 		//CLEAN THE STRINGS
-		for (i = 0; i < localFiles.length -1; i++){
+		for (i = 0; i < localFiles.length; i++){
 			localFiles[i] = localFiles[i].trim();
 		}
 		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
@@ -75,7 +79,7 @@ function listFiles(path){
 		// Populate ROOMS datastructure
 		process.stdout.write("POPULATE ROOMS: \n");
 		rooms = new Array(localFiles.length);
-		for (i = 0; i < localFiles.length - 1; i++){
+		for (i = 0; i < localFiles.length; i++){
 			rooms.push(localFiles[i]);
 			rooms[localFiles[i]] = new Array(20); //20 max listeners/editors
 			for(j = 0; j < 20; j ++){
@@ -106,7 +110,7 @@ contains
 function contains(fname){
 	process.stdout.write("CONTAINS() called for fname: " + fname+"\n");
 	if(fname){
-		for (i = 0; i < localFiles.length - 1; i++){
+		for (i = 0; i < localFiles.length; i++){
 			if(localFiles[i] == fname){
 				process.stdout.write("RETURNED TRUE \n");
 				return true;
@@ -171,13 +175,13 @@ function updateDirectory(cmd, fname, path, data){
 			process.stdout.write("updateDirectory DELETE fname: " + fname);
 			//TODO TEST:
 			contains(fname);
-			for(i = 0; i < localFiles.length -1; i++){
+			for(i = 0; i < localFiles.length; i++){
 				//length conditions are to remove EMPTY CHARACTERS, see KNOWN BUGS in header
 				if(localFiles[i] == fname || localFiles[i].length == 0 || localFiles[i].length == 1){
 					localFiles.splice(i, 1);
-					process.stdout.write("-----------------------------\n");
+					process.stdout.write("\n-----------------------------\n");
 					process.stdout.write("Deleted all " + fname + "\n");
-					process.stdout.write("-----------------------------\n");
+					process.stdout.write("\n-----------------------------\n");
 				}
 			}
 			//recursive call update MASTERLOG
@@ -350,7 +354,7 @@ Searches the rooms for the designated socket
 function findClient(sckt){
 	var room;
 	var argR = new Array(2);
-	for(j = 0; j < localFiles.length -1; j++){
+	for(j = 0; j < localFiles.length; j++){
 		room = localFiles[j];
 		for(i=0; i < 20; i++){
 			if(rooms[room][i].sckt == sckt){

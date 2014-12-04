@@ -7,9 +7,10 @@ Known Bugs:
 
 -----------------------------------------------------------------
 Description:
+- added fileHandler calls where fileHandler EVENT CALL stubs located
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.3
-Last Update: 12/03/14
+Version: 0.0.4
+Last Update: 12/04/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - start
