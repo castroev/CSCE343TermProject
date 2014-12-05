@@ -257,7 +257,9 @@ function updateDirectory(cmd, fname, path, data){
 
 // TO IMPLEMENT 12/03/14-----------------------------------------------------------------------------------------
 // SATISFY SERVER SPECIFIED EVENT CALLS:
+//TODO
 /**
+
 	 * Event *
 	newChar:
 	 	Parameters:
@@ -268,7 +270,8 @@ function updateDirectory(cmd, fname, path, data){
 				function(keyVal, index, callback)
 	Last modified: 12/3/14
 	 */
-/**
+//SATED
+	 /**
 	 * Event *
 	isEditable:
 		-Parameters:
@@ -281,10 +284,10 @@ function updateDirectory(cmd, fname, path, data){
 // END SERVER SPECIFIED EVENT CALLS ----------------------------------
 /*
 FILEHANDLER OBJECTIVES 12/03/14 - 12/04/14:
-1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
-2. HTML page FILE SELECT buttons
+^1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
+^2. HTML page FILE SELECT buttons
 		calls to HTML Generation w/ fileText upload
-3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
+^3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
 		Handle disconnect/con close cases
 4. FH File watch; call Multicast for ON UPDATE
 5. FILE ROOM PAGE, multiple cursors
