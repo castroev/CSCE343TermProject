@@ -3,14 +3,16 @@ Jonas Nordstrom; Ermenildo V. Castro, Jr.
 fileHandler.js
 -----------------------------------------------------------------
 Known Bugs:
-updateDirectory function appends EMPTY CHARACTERS into the list.
-
+- updateDirectory function appends EMPTY CHARACTERS into the list.
+- if "pulling" from castroev MASTER repository, clean your MASTERLOG
+	("non-existent" files on your local directory will cause errors)
 -----------------------------------------------------------------
 Description:
 - removed the array.length -1 appends FOR ALL; if errors occur, re-append
+
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.4
-Last Update: 12/04/14
+Version: 0.0.5
+Last Update: 12/06/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - existsFile
@@ -19,11 +21,23 @@ Available Program Functions:
 - isBeingEdited
 - trackClient
 - getBuffer
+- newChar
 -----------------------------------------------------------------
 References:
 SmashingJsNode;
 StackOverflow;
 -----------------------------------------------------------------
+*/
+
+/*
+FILEHANDLER OBJECTIVES 12/03/14 - 12/06/14:
+^1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
+^2. HTML page FILE SELECT buttons
+		calls to HTML Generation w/ fileText upload
+^3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
+		Handle disconnect/con close cases
+4. FH File watch; call Multicast for ON UPDATE
+5. FILE ROOM PAGE, multiple cursors
 */
 var fs = require('fs');
 var localFiles;
@@ -144,6 +158,7 @@ getBuffer
 */
 function getBuffer(fileName){
 	if(!existsFile(fileName)){
+		process.stdout.write("\n!!!!!!!NO SUCH fileName, getBuffer!!!!!!!\n");
 		return false;
 	}
 	return rooms[fileName][20];
@@ -255,43 +270,6 @@ function updateDirectory(cmd, fname, path, data){
 
 }
 
-// TO IMPLEMENT 12/03/14-----------------------------------------------------------------------------------------
-// SATISFY SERVER SPECIFIED EVENT CALLS:
-//TODO
-/**
-
-	 * Event *
-	newChar:
-	 	Parameters:
-			- keyVal, the value of the key (ASCII) that was pressed
-			- index, index of the cursor when the key was pressed
-			- callback, the callback function that will confirm if the 
-				operation was successful
-				function(keyVal, index, callback)
-	Last modified: 12/3/14
-	 */
-//SATED
-	 /**
-	 * Event *
-	isEditable:
-		-Parameters:
-			-fileName
-			-callback, the callback function which returns if file is editable
-	/TODO: Implement in fileHandler which checks if file is being edited
-	//callback(fileHandler.isBeingEdited('/files/', fileName));
-	Last modified: 11/30/14, J.Nordstrom
-	 */
-// END SERVER SPECIFIED EVENT CALLS ----------------------------------
-/*
-FILEHANDLER OBJECTIVES 12/03/14 - 12/04/14:
-^1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
-^2. HTML page FILE SELECT buttons
-		calls to HTML Generation w/ fileText upload
-^3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
-		Handle disconnect/con close cases
-4. FH File watch; call Multicast for ON UPDATE
-5. FILE ROOM PAGE, multiple cursors
-*/
 //END DOCUMENTATION----------------------------------------------------------------------------------------------
 /*
 isBeingEdited
@@ -373,6 +351,7 @@ function trackClient(fileName, socket, cmd){
 	return false;
 }
 //END trackClient----------------------------------------
+
 // getAvailableRoom(room)
 // acquires the index of an available space within the specified room;
 // private helper;
@@ -417,9 +396,36 @@ function findClient(sckt){
 	return -1;
 }
 // END findClient ------------------------------------------
-
-
-
+/*
+newChar
+- update the buffer with new data
+@param keyVal - the ASCII code of the new character
+@param index - cursor location corresponding to index in buffer
+@param fileName - name of the file to update with new character
+@return - TRUE if successful insertion; FALSE otherwise
+*/
+function newChar(keyVal, index, fileName){
+	// parameter actual error
+	if (!keyVal || !index || !existsFile(fileName)){
+		process.stdout.write("Invalid Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
+		return false;
+	}
+	// index parameter failure
+	if (index < 0 || index > rooms[fileName][20].length){
+		process.stdout.write("\nInvalid Index, newChar: " + index + "\n");
+		return false
+	}
+	var chr = String.fromCharCode(keyVal);
+	if( index == rooms[fileName][20].length){
+		rooms[fileName][20].push(chr);
+	}
+	else{
+		rooms[fileName][20][index] = chr;
+	}
+	process.stdout.write("\n Wrote '" + chr + "' to buffer. \n");
+	return true;
+}
+//END newChar------------------------------------------------
 
 
 
@@ -432,3 +438,4 @@ exports.updateDirectory = updateDirectory;
 exports.trackClient = trackClient;
 exports.isBeingEdited = isBeingEdited;
 exports.getBuffer = getBuffer;
+exports.newChar = newChar;
