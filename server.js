@@ -3,13 +3,16 @@ Jonas Nordstrom; Ermenildo V. Castro, Jr.
 server.js
 -----------------------------------------------------------------
 Known Bugs:
-
+- different connections, after buffer construction, are
+		assigned new incarnations
+		* prev. editor is BLOCKED; new editor accepted despite 
+			file "being edited"
 
 -----------------------------------------------------------------
 Description:
 - added fileHandler calls where fileHandler EVENT CALL stubs located
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.5
+Version: 0.0.6
 Last Update: 12/06/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
@@ -157,7 +160,7 @@ io.on('connection', function(socket) {
 			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
 			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
 			fileHandler.trackClient(fileName, socket, "ADDE");
-			socket.join(fileName);
+			//socket.join(fileName);
 			//callback("Hello world! This is just a sample text from server");
 			
 			
@@ -176,7 +179,12 @@ io.on('connection', function(socket) {
 			console.log('Update is being sent to the listeners...');
 			// Get the update from the fileHandler for the specified file
 			socket.emit('newChar', fileHandler.getBuffer(fileName));
-
+			// MODIFIED 12/06/14, Ermenildo V. Castro, Jr.
+			//		a-synchronous fileWrite call
+			if(fileHandler.updateDirectory("REFRESH", fileName, "./files/", fileHandler.getBuffer(fileName))){
+			console.log("\n++++++++++REFRESHED " + fileName + " ++++++++++++\n");
+			}
+			
 		}, 3000);
 
 

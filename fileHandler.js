@@ -11,7 +11,7 @@ Description:
 - removed the array.length -1 appends FOR ALL; if errors occur, re-append
 
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.6
+Version: 0.0.7
 Last Update: 12/06/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
@@ -31,14 +31,15 @@ StackOverflow;
 */
 
 /*
-FILEHANDLER OBJECTIVES 12/03/14 - 12/06/14:
+FILEHANDLER OBJECTIVES 12/03/14 - 12/07/14:
 ^1. Implement specified EVENT CALLS from SERVER (12/03/14 specifications)
 ^2. HTML page FILE SELECT buttons
 		calls to HTML Generation w/ fileText upload
 ^3. Multicast function in FH; 2d array, SocketRoom(FileName)*Nickname
 		Handle disconnect/con close cases
-4. FH File watch; call Multicast for ON UPDATE
+^4. FH File watch; call Multicast for ON UPDATE
 5. FILE ROOM PAGE, multiple cursors
+6. HTML buttons-Server-FH link: "Create File," "Delete File"
 */
 var fs = require('fs');
 var localFiles;
@@ -49,7 +50,7 @@ MODIFIED 11/16/14
 - DEPENDENCY: listFiles(path) MUST BE CALLED PRIOR TO existsFile(path)
  */
 function existsFile(path) {
-	process.stdout.write('fileHandler:\tChecking if file "' + path + '" exists...');
+	//process.stdout.write('fileHandler:\tChecking if file "' + path + '" exists...');
 	
 	// Try to request the file
 	try {
@@ -58,7 +59,7 @@ function existsFile(path) {
 		//var stat = fs.statSync('./files/' + path);
 		
 		if (contains(path)) {
-			process.stdout.write('file exists.\n');
+			//process.stdout.write('file exists.\n');
 			return true;
 		} else {
 			process.stdout.write("contains val: " + contains(path) + "\n");
@@ -80,7 +81,7 @@ listFiles:
 */
 function listFiles(path){
 	if(path){
-		process.stdout.write("listFiles called \n");
+		//process.stdout.write("listFiles called \n");
 		var str = fs.readFileSync(path + "MASTERLOG.txt", "utf8"); //BLOCKING PROCESS
 		//MASTERLOG IS CSV
 		localFiles = str.split(',');
@@ -91,7 +92,7 @@ function listFiles(path){
 		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
 		// replaced INTEGRITY TEST.
 		// Populate ROOMS datastructure
-		process.stdout.write("POPULATE ROOMS: \n");
+		//process.stdout.write("POPULATE ROOMS: \n");
 		rooms = new Array();
 		for (i = 0; i < localFiles.length; i++){
 			rooms.push(localFiles[i]);
@@ -112,7 +113,7 @@ function listFiles(path){
 			if(!openFile(path, localFiles[k])){
 				process.stdout.write("\n!!!!!!! ERROR OPENING FILE!!!!!!!\n");
 			}
-			else{process.stdout.write("\n Created Buffer: " + localFiles[k]+"\n")
+			//else{process.stdout.write("\n Created Buffer: " + localFiles[k]+"\n")
 				/*
 				// TEST CODE
 				process.stdout.write("char contents: " + localFiles[k] + "\n" );
@@ -120,7 +121,7 @@ function listFiles(path){
 					process.stdout.write("CHAR: " + rooms[localFiles[k]][20][j] + "\n");
 				}
 				*/
-			}
+			//}
 		}
 		
 		
@@ -171,21 +172,21 @@ contains
 - @return TRUE for file in localDirectory; else FALSE
 */
 function contains(fname){
-	process.stdout.write("CONTAINS() called for fname: " + fname+"\n");
+	//process.stdout.write("\nCONTAINS() called for fname: " + fname+"\n");
 	if(fname){
 		for (i = 0; i < localFiles.length; i++){
 			if(localFiles[i] == fname){
-				process.stdout.write("RETURNED TRUE \n");
+			//	process.stdout.write("RETURNED TRUE \n");
 				return true;
 			}
-			else{process.stdout.write("Searched " +i+": " + localFiles[i] + "\n");}
+			//else{process.stdout.write("Searched " +i+": " + localFiles[i] + "\n");}
 		}
-		process.stdout.write("RETURNED FALSE \n");
+		//process.stdout.write("RETURNED FALSE \n");
 		return false;
 	}
 	else{
-		process.stdout.write("Invalid fname, " + fname);
-		process.stdout.write("RETURNED FALSE");
+		process.stdout.write("\nInvalid fname, " + fname);
+		process.stdout.write("\nRETURNED FALSE");
 		return false;
 	}
 }
@@ -214,7 +215,7 @@ function updateDirectory(cmd, fname, path, data){
 			process.stdout.write("updateDirectory ADD fname: " + fname + "\n");
 			localFiles[localFiles.length] = fname;
 			//recursive call update MASTERLOG
-			process.stdout.write("localFiles ADD: " + localFiles.toString() + "\n");
+			//process.stdout.write("localFiles ADD: " + localFiles.toString() + "\n");
 			//create instance of file on local server file directory
 			fs.writeFile(path + fname, data, function(err){
 				if(err){
@@ -223,13 +224,13 @@ function updateDirectory(cmd, fname, path, data){
 					process.stdout.write("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
 				}
 				else{
-					process.stdout.write("Successful write to local directory. \n");
+					process.stdout.write("\nSuccessful write to local directory. \n");
 				}
 			});
 			return updateDirectory("REFRESH", "MASTERLOG.txt", path, localFiles.toString());
 		}
 		else{
-			process.stdout.write("Invalid filename, fname" + fname);
+			process.stdout.write("\nInvalid filename, fname" + fname);
 			return false;
 		}
 	}
@@ -250,12 +251,12 @@ function updateDirectory(cmd, fname, path, data){
 			//recursive call update MASTERLOG
 			return updateDirectory("REFRESH", "MASTERLOG.txt", path, localFiles.toString());
 		}else{
-			process.stdout.write("Invalid filename, fname" + fname);
+			process.stdout.write("\nInvalid filename, fname" + fname);
 			return false;
 		}
 	}
 	else if (cmd.toUpperCase() == "REFRESH"){
-		process.stdout.write("updateDirectory REFRESH: " + fname +" : " + path +" : " + data + "\n");
+		//process.stdout.write("updateDirectory REFRESH: " + fname +" : " + path +" : " + data + "\n");
 		if(fname && data && contains(fname) && path){
 			fs.writeFile(path + fname, data, function(error){
 				process.stdout.write("REFRESH OCCURRED\n");
@@ -263,11 +264,11 @@ function updateDirectory(cmd, fname, path, data){
 			return true;
 		}
 		else{
-			process.stdout.write("Invalid fname, path, or data: " + fname +" : " + path +" : " + data);
+			process.stdout.write("\nInvalid fname, path, or data: " + fname +" : " + path +" : " + data);
 			return false;
 		}
 	}
-	else{process.stdout.write("Invalid CMD argument, must be {ADD, DELETE, REFRESH}"); return false;}
+	else{process.stdout.write("\nInvalid CMD argument, must be {ADD, DELETE, REFRESH}"); return false;}
 
 }
 
@@ -289,7 +290,7 @@ function isBeingEdited(path, fileName){
 			return true;
 		}
 	}
-	process.stdout.write(fileName + " available for edit.");
+	process.stdout.write("\n" +fileName + " available for edit.\n");
 	return false;
 }
 //END isBeingEdited--------------------------------------
@@ -308,7 +309,7 @@ trackClient
 @return - TRUE for successful addition, FALSE otherwise
 */
 function trackClient(fileName, socket, cmd){
-	process.stdout.write("\nTrackClient Called: " + cmd +"\n");
+	//process.stdout.write("\nTrackClient Called: " + cmd +"\n");
 	if((!existsFile(fileName) && cmd != "REMOVE") || !socket || !cmd ){
 		process.stdout.write("Invalid Arguments, trackClient: \n" + fileName + "\n" + socket + "\n" + cmd + "\n");
 		//return false;
@@ -440,7 +441,8 @@ newChar
 @return - TRUE if successful insertion; FALSE otherwise
 */
 function newChar(keyVal, index, fileName){
-	process.stdout.write("Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
+	//process.stdout.write("Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
+	
 	//handle special characters
 	if(charFilter(keyVal, index, fileName)){return true;}
 	// parameter actual error
@@ -449,6 +451,11 @@ function newChar(keyVal, index, fileName){
 		return false;
 	}
 	var strbuf = rooms[fileName][20];
+	// domain verification
+	if(index < 0){
+		process.stdout.write("\n!!!!!!!!!!!! newChar, index: OutOfBounds !!!!!!!!!\n");
+		return false;
+	}
 	// index parameter failure
 	if (index < 0 || index > strbuf.length){
 		process.stdout.write("\nInvalid Index, newChar: " + index + "\n");
@@ -476,8 +483,8 @@ function newChar(keyVal, index, fileName){
 			rooms[fileName][20] = strbuf;
 		}
 	}
-	process.stdout.write("\n Wrote '" + chr + "' to buffer. \n");
-	process.stdout.write("\n ~~~~~~ BUFFER UPDATED ~~~~~~~~\n" + getBuffer(fileName) + "\n~~~~~~~~~~~~~~~~~~\n");
+	//process.stdout.write("\n Wrote '" + chr + "' to buffer. \n");
+	//process.stdout.write("\n ~~~~~~ BUFFER UPDATED ~~~~~~~~\n"+ getBuffer(fileName) + "\n~~~~~~~~~~~~~~~~~~\n");
 	return true;
 }
 //END newChar------------------------------------------------
