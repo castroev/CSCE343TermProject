@@ -11,7 +11,7 @@ Description:
 - removed the array.length -1 appends FOR ALL; if errors occur, re-append
 
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.5
+Version: 0.0.6
 Last Update: 12/06/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
@@ -22,6 +22,7 @@ Available Program Functions:
 - trackClient
 - getBuffer
 - newChar
+- findClient
 -----------------------------------------------------------------
 References:
 SmashingJsNode;
@@ -307,7 +308,7 @@ trackClient
 @return - TRUE for successful addition, FALSE otherwise
 */
 function trackClient(fileName, socket, cmd){
-	process.stdout.write("\nTrackClient Called: \n");
+	process.stdout.write("\nTrackClient Called: " + cmd +"\n");
 	if((!existsFile(fileName) && cmd != "REMOVE") || !socket || !cmd ){
 		process.stdout.write("Invalid Arguments, trackClient: \n" + fileName + "\n" + socket + "\n" + cmd + "\n");
 		//return false;
@@ -389,6 +390,7 @@ function findClient(sckt){
 			if(rooms[room][i].sckt == sckt){
 				argR[0] = room;
 				argR[1] = i;
+				argR[2] = rooms[room][i].type;
 				return argR;
 			}
 		}
@@ -396,6 +398,39 @@ function findClient(sckt){
 	return -1;
 }
 // END findClient ------------------------------------------
+/*
+charFilter
+@param key - the character to filter
+@param i  - the index
+@param fn - the file name
+@return TRUE for valid char; FALSE otherwise
+*/
+function charFilter(key, i, fn){
+	switch(key){
+		case "Enter":
+			if(newChar('\n', i, fn)){return true;}
+			break;
+		case "Up":
+			return true;
+			break;
+		case "Down":
+			return true;
+			break;
+		case "Right":
+			return true;
+			break;
+		case "Left":
+			return true;
+			break;
+		case "Backspace":
+			if(newChar("~!~", i, fn)){return true;}
+			break;
+		case "Del":
+			if(newChar("~!~", i, fn)){return true;}
+			break;
+	}
+	return false;
+}
 /*
 newChar
 - update the buffer with new data
@@ -405,24 +440,44 @@ newChar
 @return - TRUE if successful insertion; FALSE otherwise
 */
 function newChar(keyVal, index, fileName){
+	process.stdout.write("Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
+	//handle special characters
+	if(charFilter(keyVal, index, fileName)){return true;}
 	// parameter actual error
 	if (!keyVal || !index || !existsFile(fileName)){
 		process.stdout.write("Invalid Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
 		return false;
 	}
+	var strbuf = rooms[fileName][20];
 	// index parameter failure
-	if (index < 0 || index > rooms[fileName][20].length){
+	if (index < 0 || index > strbuf.length){
 		process.stdout.write("\nInvalid Index, newChar: " + index + "\n");
 		return false
 	}
-	var chr = String.fromCharCode(keyVal);
-	if( index == rooms[fileName][20].length){
-		rooms[fileName][20].push(chr);
+	//var chr = String.fromCharCode(keyVal);
+	var chr = keyVal;
+	if( index == strbuf.length && keyVal != "~!~"){
+		rooms[fileName][20] = strbuf.concat(chr);
 	}
 	else{
-		rooms[fileName][20][index] = chr;
+		// handle DEL / Backspace cases
+		if(keyVal == "~!~"){
+			chr = '';
+			var cp01 = strbuf.slice(0, index -1);
+			var cp02 = strbuf.slice(index, strbuf.length);
+			strbuf = cp01.concat(cp02);
+			rooms[fileName][20] = strbuf;
+		}
+		else{
+			var cp01 = strbuf.slice(0, index);
+			var cp02 = strbuf.slice(index, strbuf.length);
+			strbuf = cp01.concat(chr);
+			strbuf = strbuf.concat(cp02);
+			rooms[fileName][20] = strbuf;
+		}
 	}
 	process.stdout.write("\n Wrote '" + chr + "' to buffer. \n");
+	process.stdout.write("\n ~~~~~~ BUFFER UPDATED ~~~~~~~~\n" + getBuffer(fileName) + "\n~~~~~~~~~~~~~~~~~~\n");
 	return true;
 }
 //END newChar------------------------------------------------
@@ -439,3 +494,4 @@ exports.trackClient = trackClient;
 exports.isBeingEdited = isBeingEdited;
 exports.getBuffer = getBuffer;
 exports.newChar = newChar;
+exports.findClient = findClient;
