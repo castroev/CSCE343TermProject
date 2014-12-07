@@ -11,8 +11,8 @@ Description:
 - removed the array.length -1 appends FOR ALL; if errors occur, re-append
 
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.7
-Last Update: 12/06/14
+Version: 0.0.8
+Last Update: 12/07/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - existsFile
@@ -44,6 +44,7 @@ FILEHANDLER OBJECTIVES 12/03/14 - 12/07/14:
 var fs = require('fs');
 var localFiles;
 var rooms;
+var serverInstance = true;
 /**
 MODIFIED 11/16/14
 - Determines if File exists in server local directory AND if File exists within the localFiles array
@@ -89,23 +90,9 @@ function listFiles(path){
 		for (i = 0; i < localFiles.length; i++){
 			localFiles[i] = localFiles[i].trim();
 		}
-		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
-		// replaced INTEGRITY TEST.
-		// Populate ROOMS datastructure
-		//process.stdout.write("POPULATE ROOMS: \n");
-		rooms = new Array();
-		for (i = 0; i < localFiles.length; i++){
-			rooms.push(localFiles[i]);
-			rooms[localFiles[i]] = new Array(21); //20 max listeners/editors; last index will store the file buffer
-			for(j = 0; j < 20; j ++){
-				rooms[localFiles[i]][j] = "*";//NULL VALUE
-			}
-			// TEST CODE--------------------------------
-			//rooms[localFiles[i]].push("SUCCESS TEST!");
-			//rooms[localFiles[i]][0] = "SUCESS TEST";
-			//process.stdout.write("Room Key: " + rooms[localFiles[i]][0] + "\n");
-			// END TEST CODE----------------------------
-		}
+		
+		// generate connection status for sockets
+		populateRooms();
 		
 		// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
 		// Construct file buffer
@@ -134,6 +121,39 @@ function listFiles(path){
 		return;
 	}
 }
+// END listFiels-----------------------------------------------------------
+/*
+populateRooms
+- internal function
+- CALL ONCE
+*/
+function populateRooms(){
+	// serverInstance is global flag
+	// ensure populateRoooms is executed ONCE and ONLY ONCE
+	// 		upon server start, and connection
+	if(serverInstance){
+		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
+		// replaced INTEGRITY TEST.
+		// Populate ROOMS datastructure
+		//process.stdout.write("POPULATE ROOMS: \n");
+		rooms = new Array();
+		for (i = 0; i < localFiles.length; i++){
+			rooms.push(localFiles[i]);
+			rooms[localFiles[i]] = new Array(21); //20 max listeners/editors; last index will store the file buffer
+			for(j = 0; j < 20; j ++){
+				if(rooms[localFiles[i]][j] == "undefined" || rooms[localFiles[i]][j] == null){rooms[localFiles[i]][j] = "*";//NULL VALUE}
+			}
+			// TEST CODE--------------------------------
+			//rooms[localFiles[i]].push("SUCCESS TEST!");
+			//rooms[localFiles[i]][0] = "SUCESS TEST";
+			//process.stdout.write("Room Key: " + rooms[localFiles[i]][0] + "\n");
+			// END TEST CODE----------------------------
+			}
+		}
+		serverInstance = false;
+	}
+}
+// END populateRooms;
 /*
 openFile
 - reads the file, then creates a buffer datastructure
@@ -257,7 +277,10 @@ function updateDirectory(cmd, fname, path, data){
 	}
 	else if (cmd.toUpperCase() == "REFRESH"){
 		//process.stdout.write("updateDirectory REFRESH: " + fname +" : " + path +" : " + data + "\n");
-		if(fname && data && contains(fname) && path){
+		if(fname && contains(fname) && path){
+			if (!data){
+				data = ' ';
+			}
 			fs.writeFile(path + fname, data, function(error){
 				process.stdout.write("REFRESH OCCURRED\n");
 			});
@@ -446,21 +469,12 @@ function newChar(keyVal, index, fileName){
 	//handle special characters
 	if(charFilter(keyVal, index, fileName)){return true;}
 	// parameter actual error
-	if (!keyVal || !index || !existsFile(fileName)){
+	if (!keyVal || index < 0 || !existsFile(fileName)){
 		process.stdout.write("Invalid Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
 		return false;
 	}
 	var strbuf = rooms[fileName][20];
-	// domain verification
-	if(index < 0){
-		process.stdout.write("\n!!!!!!!!!!!! newChar, index: OutOfBounds !!!!!!!!!\n");
-		return false;
-	}
-	// index parameter failure
-	if (index < 0 || index > strbuf.length){
-		process.stdout.write("\nInvalid Index, newChar: " + index + "\n");
-		return false
-	}
+	
 	//var chr = String.fromCharCode(keyVal);
 	var chr = keyVal;
 	if( index == strbuf.length && keyVal != "~!~"){
