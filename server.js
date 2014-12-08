@@ -3,17 +3,15 @@ Jonas Nordstrom; Ermenildo V. Castro, Jr.
 server.js
 -----------------------------------------------------------------
 Known Bugs:
-- different connections, after buffer construction, are
-		assigned new incarnations
-		* prev. editor is BLOCKED; new editor accepted despite 
-			file "being edited"
-
+- closing WINDOW of a READER will erease the buffer
+	* circumvent problem by calling "exit" from EDITOR, then
+		re-select file as EDITOR
 -----------------------------------------------------------------
 Description:
 - added fileHandler calls where fileHandler EVENT CALL stubs located
 <<<<<<<<<<<<<<<<<<< MAINTAIN CONSISTENCY >>>>>>>>>>>>>>>>>>>>>>>>
-Version: 0.0.6
-Last Update: 12/06/14
+Version: 0.0.7
+Last Update: 12/07/14
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Available Program Functions:
 - start
@@ -145,8 +143,8 @@ io.on('connection', function(socket) {
 	Last modified: 12/03/14, J.Nordstrom; Ermenildo V. Castro, Jr.
 	 */
 	socket.on('getFile', function(fileName, editMode, callback) {
-		console.log('\n ~~~~~~~Request for ' + fileName + ' received ~~~~~~~~~\n');
-		console.log('editMode: ' + editMode +'\n' + "beingEdited?: " +fileHandler.isBeingEdited('/files/', fileName) + "\n~~~~~~~~~~~~~~~~~~\n");
+		//console.log('\n ~~~~~~~Request for ' + fileName + ' received ~~~~~~~~~\n');
+		//console.log('editMode: ' + editMode +'\n' + "beingEdited?: " +fileHandler.isBeingEdited('/files/', fileName) + "\n~~~~~~~~~~~~~~~~~~\n");
 		
 		// MODIFIED 12/03/14, Ermenildo V. Castro, Jr.
 		// appended AND logical operator to check if fileName is
@@ -176,13 +174,13 @@ io.on('connection', function(socket) {
 
 		// Set the interval of the timer to execute every 60 seconds
 		interval = setInterval(function() {
-			console.log('Update is being sent to the listeners...');
+			//console.log('Update is being sent to the listeners...');
 			// Get the update from the fileHandler for the specified file
 			socket.emit('newChar', fileHandler.getBuffer(fileName));
 			// MODIFIED 12/06/14, Ermenildo V. Castro, Jr.
 			//		a-synchronous fileWrite call
 			if(fileHandler.updateDirectory("REFRESH", fileName, "./files/", fileHandler.getBuffer(fileName))){
-			console.log("\n++++++++++REFRESHED " + fileName + " ++++++++++++\n");
+				console.log("\n++++++++++REFRESHED " + fileName + " ++++++++++++\n");
 			}
 			
 		}, 3000);

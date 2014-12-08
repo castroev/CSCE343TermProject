@@ -43,7 +43,7 @@ FILEHANDLER OBJECTIVES 12/03/14 - 12/07/14:
 */
 var fs = require('fs');
 var localFiles;
-var rooms;
+var rooms = new Array();
 var serverInstance = true;
 /**
 MODIFIED 11/16/14
@@ -59,12 +59,12 @@ function existsFile(path) {
 		//COMMENTED OUT:
 		//var stat = fs.statSync('./files/' + path);
 		
-		if (contains(path)) {
+		if (contains(path, localFiles)) {
 			//process.stdout.write('file exists.\n');
 			return true;
 		} else {
-			process.stdout.write("contains val: " + contains(path) + "\n");
-			process.stdout.write('file does not exists.\n');
+			//process.stdout.write("contains val: " + contains(path) + "\n");
+			process.stdout.write('\nfile: ' +path+' does not exists.\n');
 			return false;
 		}
 	} catch (ex) {
@@ -79,6 +79,7 @@ listFiles:
 - Uses a master file, MASTERLOG, as a record of all available files available to the localhost server
 - localHost server may update MASTERLOG using additional functions such as "AddFiles" [TODO] which will write to MASTERLOG
 - @param path: the local directory to MASTERLOG.txt
+- @return localFiles: an array containing the localFiles; EXCLUDES MASTERLOG.TXT
 */
 function listFiles(path){
 	if(path){
@@ -111,9 +112,12 @@ function listFiles(path){
 			//}
 		}
 		
+		var tmpRay = localFiles;
+		tmpRay.splice(0, 1);
 		
-
-		return localFiles;
+		// MODIFIED 12/07/14
+		//		exclude MASTERLOG.txt from edit consideration
+		return tmpRay;
 	}
 	else{
 		process.stdout.write("Enter the directory of MASTERLOG.txt");
@@ -125,7 +129,7 @@ function listFiles(path){
 /*
 populateRooms
 - internal function
-- CALL ONCE
+- SERVERINSTANCE deprecated
 */
 function populateRooms(){
 	// serverInstance is global flag
@@ -136,10 +140,11 @@ function populateRooms(){
 		// replaced INTEGRITY TEST.
 		// Populate ROOMS datastructure
 		//process.stdout.write("POPULATE ROOMS: \n");
-		rooms = new Array();
 		for (i = 0; i < localFiles.length; i++){
-			rooms.push(localFiles[i]);
-			rooms[localFiles[i]] = new Array(21); //20 max listeners/editors; last index will store the file buffer
+			if(!contains(localFiles[i], rooms)){
+				rooms.push(localFiles[i]);
+				rooms[localFiles[i]] = new Array(21); //20 max listeners/editors; last index will store the file buffer
+			}
 			for(j = 0; j < 20; j ++){
 				if(rooms[localFiles[i]][j] == "undefined" || rooms[localFiles[i]][j] == null){rooms[localFiles[i]][j] = "*";//NULL VALUE}
 			}
@@ -150,7 +155,7 @@ function populateRooms(){
 			// END TEST CODE----------------------------
 			}
 		}
-		serverInstance = false;
+		//serverInstance = false;
 	}
 }
 // END populateRooms;
@@ -187,15 +192,18 @@ function getBuffer(fileName){
 }
 /**
 contains
-- Determines if localDirectory contains specified file
+- Determines if Directory contains specified file
 - @param fname: name of file
+- @param directory: file directory to search 
 - @return TRUE for file in localDirectory; else FALSE
 */
-function contains(fname){
+function contains(fname, directory){
+	// default directory; localFiles
+	if(!directory){directory = localFiles;}
 	//process.stdout.write("\nCONTAINS() called for fname: " + fname+"\n");
-	if(fname){
-		for (i = 0; i < localFiles.length; i++){
-			if(localFiles[i] == fname){
+	if(fname && directory){
+		for (i = 0; i < directory.length; i++){
+			if(directory[i] == fname){
 			//	process.stdout.write("RETURNED TRUE \n");
 				return true;
 			}
@@ -205,8 +213,8 @@ function contains(fname){
 		return false;
 	}
 	else{
-		process.stdout.write("\nInvalid fname, " + fname);
-		process.stdout.write("\nRETURNED FALSE");
+		process.stdout.write("\nInvalid fname, contains " + fname);
+		//process.stdout.write("\nRETURNED FALSE");
 		return false;
 	}
 }
@@ -277,7 +285,7 @@ function updateDirectory(cmd, fname, path, data){
 	}
 	else if (cmd.toUpperCase() == "REFRESH"){
 		//process.stdout.write("updateDirectory REFRESH: " + fname +" : " + path +" : " + data + "\n");
-		if(fname && contains(fname) && path){
+		if(fname && contains(fname, localFiles) && path){
 			if (!data){
 				data = ' ';
 			}
@@ -369,7 +377,7 @@ function trackClient(fileName, socket, cmd){
 		if (cPos == -1){return false;} // error condition
 		process.stdout.write("\n CPos: "+ cPos +" \n");
 		rooms[cPos[0]].splice(cPos[1], 1);
-		process.stdout.write("Removed Client: \nID:" + nClient.sckt.id + "\n fileName: " + fileName + "\n RoomIndex: " + cPos + "\n");
+		process.stdout.write("Removed Client: \nID:" + nClient.sckt.id +  "\n RoomIndex: " + cPos + "\n");
 		return true;
 	}
 	//process.stdout.write("\n INVALID COMMAND ARGUMENT: "+ cmd +" \n");
@@ -407,15 +415,18 @@ Searches the rooms for the designated socket
 */
 function findClient(sckt){
 	var room;
-	var argR = new Array(2);
+	var argR = new Array(3);
 	for(j = 0; j < localFiles.length; j++){
 		room = localFiles[j];
 		for(i=0; i < 20; i++){
-			if(rooms[room][i].sckt == sckt){
-				argR[0] = room;
-				argR[1] = i;
-				argR[2] = rooms[room][i].type;
-				return argR;
+			var target = rooms[room][i];
+			if(target && target != "*"){ //target !null
+				if(target.sckt == sckt){
+					argR[0] = room;
+					argR[1] = i;
+					argR[2] = rooms[room][i].type;
+					return argR;
+				}
 			}
 		}
 	}
@@ -473,8 +484,8 @@ function newChar(keyVal, index, fileName){
 		process.stdout.write("Invalid Parameters, newChar: \n keyVal -" + keyVal + "\n index - " + index + "\n fileName - " + fileName + "\n"  );
 		return false;
 	}
-	var strbuf = rooms[fileName][20];
-	
+	var strbuf = getBuffer(fileName);
+	if (!strbuf){process.stdout.write("\n INVALID strBuf, newChar: " + fileName + "\n"); return false;}
 	//var chr = String.fromCharCode(keyVal);
 	var chr = keyVal;
 	if( index == strbuf.length && keyVal != "~!~"){

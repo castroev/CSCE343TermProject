@@ -18,6 +18,7 @@
 				color: #FF0000;
 				font-size: 12px;
 				font-family: 'Monospace';
+				letter-spacing: 1.5px;
 				border-style: solid;
 				border-width: 1px;
 				border-color: #000;
@@ -75,11 +76,11 @@
 				
 				$('#editFile').click(function() {
 					// Validate that selected file can be edited
-					socket.emit('isEditable', $('#files').val(), function(isEditable) {
-						if (!isEditable) {
+					socket.emit('isEditable', $('#files').val(), function(isBeingEdit) {
+						if (!isBeingEdit) {
 							// File is valid to be edited
 							//TODO: Add appropriate url cmd
-							window.location.href = '/files/' + $('#files').val();
+							window.location.href = '/files/' + $('#files').val() + '?edit=true';
 						} else {
 							// File can not be edited, inform user
 							$('#output').html($('#files').val() + ' cannot be edited right now.');
@@ -88,7 +89,7 @@
 				});
 				$('#readFile').click(function() {
 					// A user can always listening to a file, redirect to listener
-					window.location.href = '/files/' + $('#files').val();
+					window.location.href = '/files/' + $('#files').val() + '?edit=false';
 				});
 			});
 		</script>
