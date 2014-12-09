@@ -290,7 +290,7 @@ function updateDirectory(cmd, fname, path, data){
 				data = ' ';
 			}
 			fs.writeFile(path + fname, data, function(error){
-				process.stdout.write("REFRESH OCCURRED\n");
+				process.stdout.write(".");
 			});
 			return true;
 		}

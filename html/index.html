@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hello world</title>
+		
+		<style>
+			body {
+				background-color: #F0F0F0;
+			}
+			#files {
+				margin: 5px;
+			}
+			#output {
+				width: 450px;
+				margin: 7px;
+				padding: 6px;
+				background-color: #333;
+				color: #FF0000;
+				font-size: 12px;
+				font-family: 'Monospace';
+				letter-spacing: 1.5px;
+				border-style: solid;
+				border-width: 1px;
+				border-color: #000;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>File Editor's choice!</h1>
+		</header>
+
+		Please select a file to read or edit:<br />
+		<select id="files">
+		</select>
+
+		<br />
+		<button id="editFile"> 
+			Edit File
+		</button>
+		<button id="readFile">
+			Read File
+		</button>
+
+		<br />
+		<br />
+		<br />
+
+		<div id="output">
+		</div>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+			$(document).ready(function() {
+				var socket = io.connect();
+
+				socket.on('connect', function() {
+					$('#output').html("Connected");
+				});
+				socket.on('disconnect', function() {
+					$('#output').html("Disconnected");
+				});
+				socket.on('error', function(err) {
+					$('#output').html(err);
+				});
+				socket.on('successfulConnection', function(id) { 
+                                       	$('#output').html('Socket ID: ' + id);
+					
+					socket.emit('getAvailableFiles', function(names) {
+						for (i = 0; i < names.length; i++) {
+							$('#files').append('<option value="' + names[i] + '">' + names[i] + '</option>');
+						}
+				        });
+				});
+				
+				$('#editFile').click(function() {
+					// Validate that selected file can be edited
+					socket.emit('isEditable', $('#files').val(), function(isBeingEdit) {
+						if (!isBeingEdit) {
+							// File is valid to be edited
+							//TODO: Add appropriate url cmd
+							window.location.href = '/files/' + $('#files').val() + '?edit=true';
+						} else {
+							// File can not be edited, inform user
+							$('#output').html($('#files').val() + ' cannot be edited right now.');
+						}
+					});
+				});
+				$('#readFile').click(function() {
+					// A user can always listening to a file, redirect to listener
+					window.location.href = '/files/' + $('#files').val() + '?edit=false';
+				});
+			});
+		</script>
+	</body>
+</html>

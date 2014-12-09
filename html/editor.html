@@ -57,41 +57,66 @@
 				// Create a new socket connected to the server
 				var socket = io.connect();
 
-				/*
-				* Find out if there are any commands passed
-				*/
-				var path = window.location.pathname;
-				var args = path.split('/');
-				if (args.length == 4) {
-					// cmd is passed, decide which command it is
-					editMode = true;
-
-					// Inform user
-					$('#output').html('You are in editing mode<br />Editing file, ' + args[2] + 
-						'.<br />');
-					// args[2] contains fileName
-					socket.emit('getFile', args[2], editMode, function(data) {
-						// The callback will receive the text file
-						$('#inputText').attr('value', data);
-
-						$('#output').html('You are in edit mode<br />Please edit file, ' + args[2] + '.');
-					});
-
-				} else {
-					// No cmd is passed, default is read mode
-					editMode = false;
+				/**
+				  Define functions for the two modes
+				  */
+				function readMode() {
 					$('#inputText').attr('readonly', 'readonly');
 
 					// Inform user
 					$('#output').html('You are in read mode<br />Listening to file, ' + args[2] + 
 							'.<br />Waiting for updates...<br />');
 					
-					socket.emit('getFile', args[2], editMode, function(data) {
+					socket.emit('getFile', args[2], false, function(data) {
 						// The callback will receive the text file
 						$('#inputText').val(data);
 					});
-				}
+				};
+				/*
+				* Find out if there are any commands passed
+				*/
+				var path = window.location.pathname;
+				var args = path.split('/');
+				var url = document.URL;
+				var urlSplit = url.split('?');
 
+				if (urlSplit.length = 2) {
+					// The path has a query
+					var query = urlSplit[1].split('&');
+					// Find query id
+					var i = 0;
+					for (i; i < query.length; i++) {
+						var str = query[i].split('=');
+						if (str[0] == 'edit') {
+							if (str[1] == 'true') {
+								// Validate that this is possible
+								socket.emit('isEditable', args[2], function(isBeingEdit) {
+									if (isBeingEdit) {
+										// File cannot be edited, let the user be a reader
+										editMode = false;
+										readMode();
+									} else {
+										// This operation is valid, user can be an editor
+										editMode = true;
+										// We are in editmode Inform user
+										$('#output').html('You are in editing mode<br />Editing file, ' + args[2] + 
+											'.<br />');
+										// args[2] contains fileName
+										socket.emit('getFile', args[2], true, function(data) {
+											// The callback will receive the text file
+											$('#inputText').attr('value', data);
+
+											$('#output').html('You are in edit mode<br />Please edit file, ' + args[2] + '.');
+										});
+									}
+								});
+							} else if (str[1] == 'false') {
+								editMode = false;
+								readMode();
+							}
+						}
+					}
+				}
 				/**
 				 Event newChar
 				 - Will be fired when there is a new update in the file
@@ -109,9 +134,10 @@
 				*/
 				$('#inputText').keypress(function(event) {
 					// Key is pressed, send update to server
-					//TODO: Implement the newChar call, with the parameters keyVal, index and callback
-					var pos = window.getSelection().getRangeAt(0).startOffset;
-					socket.emit('newChar', event.which, pos, function callback(valid) {
+					var pos = $('#inputText').prop('selectionStart');
+					// MODIFIED 12/06/14; Ermenildo V. Castro, Jr.
+					//		include fileName in argument list
+					socket.emit('newChar', event.key, pos, args[2], function callback(valid) {
 						// See if the update is valid
 						if (valid) {
 							$('#output').html('Updated was successful');

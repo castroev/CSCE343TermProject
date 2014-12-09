@@ -39,7 +39,7 @@ const PORT = 8888;
 app.get('/', function(req, res) {
 	console.log('About to route "/" to\n\tIP: ' + req.ip);
 	var options = {
-		root: __dirname,
+		root: __dirname + '/html/',
 		dotfiles: 'deny',
 		header: {
 			'x-timestamp': Date.now(),
@@ -71,7 +71,7 @@ app.get('/files/:name', function(req, res) {
 		// File name is valid
 		console.log('\tAbout to route "/file/' + fileName + '"');
 		var options = {
-			root: __dirname,
+			root: __dirname + '/html/',
 			dotfiles: 'deny',
 			header: {
 				'x-timestamp': Date.now(),
@@ -131,7 +131,8 @@ io.on('connection', function(socket) {
 	Last modified: 11/30/14, J.Nordstrom
 	 */
 	socket.on('isEditable', function(fileName, callback) {
-		callback(fileHandler.isBeingEdited('/files/', fileName));
+		//callback(fileHandler.isBeingEdited('/files/', fileName));
+		callback(false);
 	});
 	/**
 	 * Event *
@@ -152,8 +153,9 @@ io.on('connection', function(socket) {
 		// && fileHandler.isBeingEdited('/files/', fileName)
 		// **NOTE**
 		// PATH parameter is deprecated
+		//&& fileHandler.isBeingEdited('/files/', fileName)
 		// ********
-		if (editMode && !fileHandler.isBeingEdited('/files/', fileName)) {
+		if (editMode) {
 			// User wants to edit this file
 			console.log('ID, ' + socket.id + ', edits the file "' + fileName + '"');
 			// MODIFIED 12/04/14, Ermenildo V. Castro, Jr.
@@ -180,10 +182,10 @@ io.on('connection', function(socket) {
 			// MODIFIED 12/06/14, Ermenildo V. Castro, Jr.
 			//		a-synchronous fileWrite call
 			if(fileHandler.updateDirectory("REFRESH", fileName, "./files/", fileHandler.getBuffer(fileName))){
-				console.log("\n++++++++++REFRESHED " + fileName + " ++++++++++++\n");
+				//console.log("\n++++++++++REFRESHED " + fileName + " ++++++++++++\n");
 			}
 			
-		}, 3000);
+		}, 2500);
 
 
 		// Return the whole text file to user
